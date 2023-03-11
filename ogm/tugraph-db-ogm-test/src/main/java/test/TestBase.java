@@ -41,7 +41,7 @@ public class TestBase extends Client{
 
     public static void main(String[] args) {
         if (args.length != 3) {
-            log.info("java -jar target/tugraph-ogm-test-1.2.0.jar [host:port] [user] [password]");
+            log.info("java -jar target/tugraph-ogm-test-1.2.1.jar [host:port] [user] [password]");
             return;
         }
         sessionFactory = new SessionFactory(getDriver(args), "entity");

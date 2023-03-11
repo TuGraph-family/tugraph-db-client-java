@@ -23,7 +23,7 @@ If you are using Maven to manage the dependency in your Java project, you can ad
 <dependency>
     <groupId>com.antgroup.tugraph</groupId>
     <artifactId>tugraph-java-rpc-client</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
 </dependency>
 ```
 
@@ -32,17 +32,17 @@ If you are using Maven to manage the dependency in your Java project, you can ad
 <dependency>
     <groupId>com.antgroup.tugraph</groupId>
     <artifactId>tugraph-ogm-api</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
 </dependency>
 <dependency>
     <groupId>com.antgroup.tugraph</groupId>
     <artifactId>tugraph-ogm-core</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
 </dependency>
 <dependency>
     <groupId>com.antgroup.tugraph</groupId>
     <artifactId>tugraph-rpc-driver</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
 </dependency>
 ```
 
@@ -186,4 +186,9 @@ session.purgeDatabase();
 | Client Version | TuGraph Version |
 | -------------- | --------------- |
 |     1.1.0      |     3.3.x       |
-|     1.2.0      |     3.4.x       |
+|     1.2.1      |     3.4.x       |
+
+**Note**:
+1.2.0 is not available due to the unconsumable issue introduced by ${revision} variable in pom file[1].
+
+[1] https://stackoverflow.com/questions/41086512/maven-issue-to-build-one-module-using-revision-property

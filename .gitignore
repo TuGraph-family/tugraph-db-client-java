@@ -18,3 +18,4 @@ build/
 devenv.local
 .vscode/
 build.log
+*.flattened-pom.xml
