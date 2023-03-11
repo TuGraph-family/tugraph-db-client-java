@@ -4,3 +4,17 @@ target/
 rpc-client/target/
 # Proto generated files
 rpc-client/src/main/java/lgraph/
+.DS_Store
+*target
+*.db
+data
+out
+logs
+.classpath
+.project
+.settings
+build/
+.gradle/
+devenv.local
+.vscode/
+build.log

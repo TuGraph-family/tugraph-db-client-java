@@ -1,10 +1,11 @@
 package com.antgroup.tugraph;
+
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
-import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.JSONArray;
-
 
 
 public class CsvDesc implements Comparable<CsvDesc> {

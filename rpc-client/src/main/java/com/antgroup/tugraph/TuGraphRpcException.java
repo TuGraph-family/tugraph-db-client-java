@@ -1,4 +1,5 @@
 package com.antgroup.tugraph;
+
 import lgraph.Lgraph;
 
 public class TuGraphRpcException extends RuntimeException {

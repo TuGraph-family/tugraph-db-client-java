@@ -1,6 +1,6 @@
 package com.antgroup.tugraph;
-import com.baidu.brpc.protocol.BrpcMeta;
 
+import com.baidu.brpc.protocol.BrpcMeta;
 import lgraph.Lgraph;
 
 public interface TuGraphService {

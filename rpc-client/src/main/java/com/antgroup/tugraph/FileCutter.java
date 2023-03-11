@@ -1,7 +1,8 @@
 package com.antgroup.tugraph;
-import java.io.IOException;
-import java.io.FileNotFoundException;
+
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Arrays;
 
 public class FileCutter {
@@ -36,7 +37,7 @@ public class FileCutter {
             try {
                 stream.read(buf, bytes, 1);
             } catch (IOException e) {
-               throw e;
+                throw e;
             }
             ++bytes;
             ++readBytes;

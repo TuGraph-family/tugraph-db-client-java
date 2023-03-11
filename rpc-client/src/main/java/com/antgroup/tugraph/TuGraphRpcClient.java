@@ -1,29 +1,23 @@
-
 package com.antgroup.tugraph;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.baidu.brpc.client.BrpcProxy;
 import com.baidu.brpc.client.RpcClient;
 import com.baidu.brpc.client.RpcClientOptions;
 import com.baidu.brpc.client.loadbalance.LoadBalanceStrategy;
 import com.baidu.brpc.protocol.Options;
+import lgraph.Lgraph;
 import lombok.extern.slf4j.Slf4j;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Base64;
-import java.util.Collections;
-import java.lang.StringBuilder;
-import java.io.IOException;
-import java.io.FileInputStream;
-import java.io.BufferedInputStream;
-import java.io.UnsupportedEncodingException;
 import org.apache.commons.io.FileUtils;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.JSONArray;
 import org.apache.commons.lang3.StringUtils;
 
-
-import lgraph.Lgraph;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
 
 @SuppressWarnings("unchecked")
 @Slf4j
@@ -135,7 +129,7 @@ public class TuGraphRpcClient {
                             }
                             ++idx;
                         }
-                        sb.append((char)(temp + '0'));
+                        sb.append((char) (temp + '0'));
                         break;
                     }
                     default: {
@@ -156,7 +150,7 @@ public class TuGraphRpcClient {
                             if (temp >= 256) {
                                 throw new InputException("Illegal escape sequence: " + delimiter.substring(begin, idx));
                             }
-                            sb.append((char)(temp + '0'));
+                            sb.append((char) (temp + '0'));
                             break;
                         } else {
                             throw new InputException("Illegal escape sequence: " + delimiter.substring(begin, idx + 1));
@@ -175,7 +169,7 @@ public class TuGraphRpcClient {
         String result = null;
         File file = new File(path);
         if (!file.exists() || !file.isFile()) {
-           throw new InputException("Illegal file: " + path);
+            throw new InputException("Illegal file: " + path);
         }
         try {
             result = FileUtils.readFileToString(file, "utf-8");
@@ -186,31 +180,31 @@ public class TuGraphRpcClient {
     }
 
     private byte[] binaryFileReader(String path) throws IOException {
-         File file = new File(path);
-         if (!file.exists() || !file.isFile()) {
+        File file = new File(path);
+        if (!file.exists() || !file.isFile()) {
             throw new InputException("Illegal file: " + path);
-         }
-         long fileSize = file.length();
-         BufferedInputStream in = null;
-         try {
-            in = new BufferedInputStream(new FileInputStream(file), (int)fileSize);
-            byte[] buf = new byte[(int)fileSize];
-            int readBytes = in.read(buf, 0, (int)fileSize);
+        }
+        long fileSize = file.length();
+        BufferedInputStream in = null;
+        try {
+            in = new BufferedInputStream(new FileInputStream(file), (int) fileSize);
+            byte[] buf = new byte[(int) fileSize];
+            int readBytes = in.read(buf, 0, (int) fileSize);
             if (readBytes != fileSize) {
                 return null;
             }
             return buf;
-         } catch (IOException e) {
+        } catch (IOException e) {
             throw e;
-         } finally {
+        } finally {
             if (in != null) {
                 try {
                     in.close();
-                } catch(IOException e) {
+                } catch (IOException e) {
                     throw e;
                 }
             }
-         }
+        }
     }
 
     private List<CsvDesc> parseConfigurationFile(JSONObject conf, boolean hasPath) {
@@ -220,7 +214,7 @@ public class TuGraphRpcClient {
         List<CsvDesc> list = new ArrayList<CsvDesc>();
         JSONArray array = conf.getJSONArray("files");
         for (int idx = 0; idx < array.size(); ++idx) {
-            JSONObject obj = (JSONObject)array.get(idx);
+            JSONObject obj = (JSONObject) array.get(idx);
             if (!obj.containsKey("path") || !obj.containsKey("format") || !obj.containsKey("label")
                     || !obj.containsKey("columns")) {
                 throw new InputException("Missing \"path\" or \"format\" or \"label\" or \"columns\" in json");
@@ -250,7 +244,7 @@ public class TuGraphRpcClient {
                     csv.setSize(file.length());
                 }
                 String format = obj.getString("format");
-                if (!"JSON".equals(format) &&  !"CSV".equals(format)) {
+                if (!"JSON".equals(format) && !"CSV".equals(format)) {
                     throw new InputException("\"format\" value error : " + format + "should be CSV or JSON");
                 }
                 csv.setDataFormat(format);
@@ -270,7 +264,7 @@ public class TuGraphRpcClient {
 
                 JSONArray columns = obj.getJSONArray("columns");
                 for (int i = 0; i < columns.size(); ++i) {
-                    String column = (String)columns.get(i);
+                    String column = (String) columns.get(i);
                     if ("".equals(column)) {
                         throw new InputException("Found empty filed in json " + file.getPath());
                     }
@@ -291,7 +285,7 @@ public class TuGraphRpcClient {
     }
 
     public boolean loadPlugin(String sourceFile, String pluginType, String pluginName, String codeType,
-            String pluginDescription, boolean readOnly, String graph, double timeout) throws IOException {
+                              String pluginDescription, boolean readOnly, String graph, double timeout) throws IOException {
         byte[] content = binaryFileReader(sourceFile);
         if (content == null) {
             return false;
@@ -316,7 +310,7 @@ public class TuGraphRpcClient {
     }
 
     public String callPlugin(String pluginType, String pluginName, String param, double pluginTimeOut,
-            boolean inProcess, String graph, double timeout) {
+                             boolean inProcess, String graph, double timeout) {
         StringBuilder sb = new StringBuilder();
         sb.append("CALL db.plugin.callPlugin('");
         sb.append(pluginType);
@@ -356,7 +350,7 @@ public class TuGraphRpcClient {
     }
 
     public boolean importDataFromContent(String desc, String data, String delimiter,
-            boolean continueOnError, int threadNums, String graph, double timeout) throws UnsupportedEncodingException {
+                                         boolean continueOnError, int threadNums, String graph, double timeout) throws UnsupportedEncodingException {
         byte[] textByteDesc = new byte[0];
         byte[] textByteData = new byte[0];
         try {
@@ -424,7 +418,7 @@ public class TuGraphRpcClient {
     }
 
     public boolean importDataFromFile(String confFile, String delimiter, boolean continueOnError, int threadNums,
-            int skipPackages, String graph, double timeout) throws IOException, UnsupportedEncodingException {
+                                      int skipPackages, String graph, double timeout) throws IOException, UnsupportedEncodingException {
         String content = textFileReader(confFile);
         if ("".equals(content)) {
             throw new InputException("Illegal conf_file : " + confFile);
@@ -481,9 +475,9 @@ public class TuGraphRpcClient {
                     throw new InputException(res);
                 }
                 // TODO
-        //         if (!StringUtils.isBlank(res)) {
-        //             throw new InputException(res);
-        //         }
+                //         if (!StringUtils.isBlank(res)) {
+                //             throw new InputException(res);
+                //         }
                 buf = cutter.cut();
             }
         }
