@@ -338,7 +338,7 @@ public class TuGraphDbRpcClient {
         Lgraph.PluginRequest.PluginType type =
                 pluginType.equals("CPP") ? Lgraph.PluginRequest.PluginType.CPP : Lgraph.PluginRequest.PluginType.PYTHON;
         ByteString resp = callPlugin(type, pluginName, ByteString.copyFromUtf8(param), graph, pluginTimeOut, inProcess);
-        return resp.toString();
+        return resp.toStringUtf8();
     }
 
     public String callPlugin(String pluginType, String pluginName, ByteString param,
@@ -346,7 +346,7 @@ public class TuGraphDbRpcClient {
         Lgraph.PluginRequest.PluginType type =
                 pluginType.equals("CPP") ? Lgraph.PluginRequest.PluginType.CPP : Lgraph.PluginRequest.PluginType.PYTHON;
         ByteString resp = callPlugin(type, pluginName, param, graph, timeout, inProcess);
-        return resp.toString();
+        return resp.toStringUtf8();
     }
 
     public ByteString callPlugin(Lgraph.PluginRequest.PluginType type, String name, ByteString param,

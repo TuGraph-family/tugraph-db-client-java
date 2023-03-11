@@ -19,7 +19,8 @@ public class TuGraphDbRpcClientTest {
         log.info("----------------testLoadProcedure--------------------");
         try {
             client.callCypher("CALL db.dropDB()", "default", 10);
-            boolean result = client.loadProcedure("./sortstr.so", "CPP", "sortstr", "SO", "test sortstr", true, "default"
+            boolean result = client.loadProcedure("./sortstr.so", "CPP", "sortstr", "SO", "test sortstr", true,
+                    "default"
                     , 1000);
             log.info("loadProcedure : " + result);
             assert (result);
@@ -38,17 +39,12 @@ public class TuGraphDbRpcClientTest {
         log.info("----------------testCallPlugin--------------------");
         String result1 = client.callPlugin("CPP", "sortstr", ByteString.copyFromUtf8("gecfb"), "default", 1000
                 , false);
-        log.info("testCallPlugin : " + result1);
-        JSONObject jsonObject1 = JSONObject.parseObject(result1);
-        assert (jsonObject1.containsKey("result"));
-        assert ("bcefg".equals(jsonObject1.getString("result")));
-
+        log.info("testCallPlugin 1: " + result1);
+        assert ("bcefg".equals(result1));
 
         String result2 = client.callPlugin("CPP", "sortstr", "gecfb", 1000, false, "default", 1000);
-        log.info("testCallPlugin : " + result2);
-        JSONObject jsonObject2 = JSONObject.parseObject(result2);
-        assert (jsonObject2.containsKey("result"));
-        assert ("bcefg".equals(jsonObject2.getString("result")));
+        log.info("testCallPlugin 2: " + result2);
+        assert ("bcefg".equals(result2));
     }
 
     public static void callProcedure(TuGraphDbRpcClient client) {
