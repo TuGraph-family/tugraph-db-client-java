@@ -14,4 +14,4 @@ echo "<settings>
 </settings>" > ~/.m2/settings.xml
 
 # build all
-mvn clean -f  ../../deps/tugraph-db-client-java/pom.xml install -DskipTests
+mvn clean -f pom.xml install -DskipTests
