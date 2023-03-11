@@ -184,11 +184,11 @@ session.purgeDatabase();
 ## Version Map
 
 | Client Version | TuGraph Version |
-| -------------- | --------------- |
-|     1.1.0      |     3.3.x       |
-|     1.2.1      |     3.4.x       |
+|----------------| --------------- |
+| 1.1.1          |     3.3.x       |
+| 1.2.1          |     3.4.x       |
 
 **Note**:
-1.2.0 is not available due to the unconsumable issue introduced by ${revision} variable in pom file[1].
+1.1.0、1.2.0 is not available due to the unconsumable issue introduced by ${revision} variable in pom file[1].
 
 [1] https://stackoverflow.com/questions/41086512/maven-issue-to-build-one-module-using-revision-property
