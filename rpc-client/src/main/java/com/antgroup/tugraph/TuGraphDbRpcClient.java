@@ -8,6 +8,7 @@ import com.baidu.brpc.client.RpcClient;
 import com.baidu.brpc.client.RpcClientOptions;
 import com.baidu.brpc.client.loadbalance.LoadBalanceStrategy;
 import com.baidu.brpc.protocol.Options;
+import com.google.protobuf.ByteString;
 import lgraph.Lgraph;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -23,12 +24,12 @@ import java.util.List;
 @Slf4j
 public class TuGraphDbRpcClient {
 
+    private static final int TIMEOUTINMS = 60 * 60 * 1000;
     private RpcClient client;
     private TuGraphDbService tuGraphService;
     private String token;
     private String url;
     private long serverVersion;
-    private static final int TIMEOUTINMS = 60 * 60 * 1000;
 
     public TuGraphDbRpcClient(String url, String user, String pass) {
         RpcClientOptions options = new RpcClientOptions();
@@ -41,7 +42,8 @@ public class TuGraphDbRpcClient {
         Lgraph.LoginRequest loginReq = Lgraph.LoginRequest.newBuilder().setUser(user).setPassword(pass).build();
         Lgraph.AuthRequest authReq = Lgraph.AuthRequest.newBuilder().setLogin(loginReq).build();
         Lgraph.AclRequest req = Lgraph.AclRequest.newBuilder().setAuthRequest(authReq).build();
-        Lgraph.LGraphRequest request = Lgraph.LGraphRequest.newBuilder().setAclRequest(req).setToken("").setIsWriteOp(false).build();
+        Lgraph.LGraphRequest request =
+                Lgraph.LGraphRequest.newBuilder().setAclRequest(req).setToken("").setIsWriteOp(false).build();
 
         Lgraph.LGraphResponse response = tuGraphService.HandleRequest(request);
         if (response.getErrorCode().getNumber() != Lgraph.LGraphResponse.ErrorCode.SUCCESS_VALUE) {
@@ -57,8 +59,10 @@ public class TuGraphDbRpcClient {
     }
 
     private String handleCypherRequest(String query, String graph, double timeout) {
-        Lgraph.CypherRequest cypherRequest = Lgraph.CypherRequest.newBuilder().setQuery(query).setResultInJsonFormat(true).setGraph(graph).setTimeout(timeout).build();
-        Lgraph.LGraphRequest request = Lgraph.LGraphRequest.newBuilder().setCypherRequest(cypherRequest).setToken(this.token).setClientVersion(serverVersion).build();
+        Lgraph.CypherRequest cypherRequest =
+                Lgraph.CypherRequest.newBuilder().setQuery(query).setResultInJsonFormat(true).setGraph(graph).setTimeout(timeout).build();
+        Lgraph.LGraphRequest request =
+                Lgraph.LGraphRequest.newBuilder().setCypherRequest(cypherRequest).setToken(this.token).setClientVersion(serverVersion).build();
         Lgraph.LGraphResponse response = tuGraphService.HandleRequest(request);
         if (response.getErrorCode().getNumber() != Lgraph.LGraphResponse.ErrorCode.SUCCESS_VALUE) {
             throw new TuGraphDbRpcException(response.getErrorCode(), response.getError(), "CallCypher");
@@ -125,7 +129,8 @@ public class TuGraphDbRpcClient {
                             } else if (delimiter.charAt(idx) >= 'A' && delimiter.charAt(idx) <= 'F') {
                                 temp = temp * 16 + (delimiter.charAt(idx) - 'A' + 10);
                             } else {
-                                throw new InputException("Illegal escape sequence: " + delimiter.substring(begin, idx + 1));
+                                throw new InputException("Illegal escape sequence: " + delimiter.substring(begin,
+                                        idx + 1));
                             }
                             ++idx;
                         }
@@ -139,10 +144,12 @@ public class TuGraphDbRpcClient {
                             for (int i = 0; i < 3; i++) {
                                 char sc = delimiter.charAt(idx);
                                 if (idx == size) {
-                                    throw new InputException("Illegal escape sequence: " + delimiter.substring(begin, idx));
+                                    throw new InputException("Illegal escape sequence: " + delimiter.substring(begin,
+                                            idx));
                                 }
                                 if (sc < '0' || sc > '7') {
-                                    throw new InputException("Illegal escape sequence: " + delimiter.substring(begin, idx + 1));
+                                    throw new InputException("Illegal escape sequence: " + delimiter.substring(begin,
+                                            idx + 1));
                                 }
                                 temp = temp * 8 + sc - '0';
                                 ++idx;
@@ -284,8 +291,8 @@ public class TuGraphDbRpcClient {
         return handleCypherRequest(cypher, graph, timeout);
     }
 
-    public boolean loadPlugin(String sourceFile, String pluginType, String pluginName, String codeType,
-                              String pluginDescription, boolean readOnly, String graph, double timeout) throws IOException {
+    public boolean loadProcedure(String sourceFile, String procedureType, String procedureName, String codeType,
+                                 String procedureDescription, boolean readOnly, String graph, double timeout) throws IOException {
         byte[] content = binaryFileReader(sourceFile);
         if (content == null) {
             return false;
@@ -293,15 +300,15 @@ public class TuGraphDbRpcClient {
         String content64 = Base64.getEncoder().encodeToString(content);
         StringBuilder sb = new StringBuilder();
         sb.append("CALL db.plugin.loadPlugin('");
-        sb.append(pluginType);
+        sb.append(procedureType);
         sb.append("','");
-        sb.append(pluginName);
+        sb.append(procedureName);
         sb.append("','");
         sb.append(content64);
         sb.append("','");
         sb.append(codeType);
         sb.append("','");
-        sb.append(pluginDescription);
+        sb.append(procedureDescription);
         sb.append("',");
         sb.append(readOnly);
         sb.append(")");
@@ -309,21 +316,52 @@ public class TuGraphDbRpcClient {
         return true;
     }
 
-    public String callPlugin(String pluginType, String pluginName, String param, double pluginTimeOut,
-                             boolean inProcess, String graph, double timeout) {
+    public String callProcedure(String procedureType, String procedureName, String param, double procedureTimeOut,
+                                boolean inProcess, String graph, double timeout) {
         StringBuilder sb = new StringBuilder();
         sb.append("CALL db.plugin.callPlugin('");
-        sb.append(pluginType);
+        sb.append(procedureType);
         sb.append("','");
-        sb.append(pluginName);
+        sb.append(procedureName);
         sb.append("','");
         sb.append(param);
         sb.append("',");
-        sb.append(pluginTimeOut);
+        sb.append(procedureTimeOut);
         sb.append(",");
         sb.append(inProcess);
         sb.append(")");
         return callCypher(sb.toString(), graph, timeout);
+    }
+
+    public String callPlugin(String pluginType, String pluginName, String param, double pluginTimeOut,
+                                boolean inProcess, String graph, double timeout) {
+        Lgraph.PluginRequest.PluginType type =
+                pluginType.equals("CPP") ? Lgraph.PluginRequest.PluginType.CPP : Lgraph.PluginRequest.PluginType.PYTHON;
+        ByteString resp = callPlugin(type, pluginName, ByteString.copyFromUtf8(param), graph, pluginTimeOut, inProcess);
+        return resp.toString();
+    }
+
+    public String callPlugin(String pluginType, String pluginName, ByteString param,
+                             String graph, double timeout, boolean inProcess) {
+        Lgraph.PluginRequest.PluginType type =
+                pluginType.equals("CPP") ? Lgraph.PluginRequest.PluginType.CPP : Lgraph.PluginRequest.PluginType.PYTHON;
+        ByteString resp = callPlugin(type, pluginName, param, graph, timeout, inProcess);
+        return resp.toString();
+    }
+
+    public ByteString callPlugin(Lgraph.PluginRequest.PluginType type, String name, ByteString param,
+                                 String graph, double timeout, boolean inProcess) {
+        Lgraph.CallPluginRequest vreq =
+                Lgraph.CallPluginRequest.newBuilder().setName(name).setParam(param).setTimeout(timeout).setInProcess(inProcess).build();
+        Lgraph.PluginRequest req =
+                Lgraph.PluginRequest.newBuilder().setType(type).setCallPluginRequest(vreq).setGraph(graph).build();
+        Lgraph.LGraphRequest request =
+                Lgraph.LGraphRequest.newBuilder().setPluginRequest(req).setToken(this.token).build();
+        Lgraph.LGraphResponse response = tuGraphService.HandleRequest(request);
+        if (response.getErrorCode().getNumber() != Lgraph.LGraphResponse.ErrorCode.SUCCESS_VALUE) {
+            throw new TuGraphDbRpcException(response.getErrorCode(), response.getError(), "CallPlugin");
+        }
+        return response.getPluginResponse().getCallPluginResponse().getReply();
     }
 
     public boolean importSchemaFromContent(String schema, String graph, double timeout) throws UnsupportedEncodingException {
@@ -418,7 +456,8 @@ public class TuGraphDbRpcClient {
     }
 
     public boolean importDataFromFile(String confFile, String delimiter, boolean continueOnError, int threadNums,
-                                      int skipPackages, String graph, double timeout) throws IOException, UnsupportedEncodingException {
+                                      int skipPackages, String graph, double timeout) throws IOException,
+            UnsupportedEncodingException {
         String content = textFileReader(confFile);
         if ("".equals(content)) {
             throw new InputException("Illegal conf_file : " + confFile);
@@ -489,7 +528,8 @@ public class TuGraphDbRpcClient {
         Lgraph.LogoutRequest logoutReq = Lgraph.LogoutRequest.newBuilder().setToken(this.token).build();
         Lgraph.AuthRequest authReq = Lgraph.AuthRequest.newBuilder().setLogout(logoutReq).build();
         Lgraph.AclRequest req = Lgraph.AclRequest.newBuilder().setAuthRequest(authReq).build();
-        Lgraph.LGraphRequest request = Lgraph.LGraphRequest.newBuilder().setAclRequest(req).setToken(this.token).setIsWriteOp(false).build();
+        Lgraph.LGraphRequest request =
+                Lgraph.LGraphRequest.newBuilder().setAclRequest(req).setToken(this.token).setIsWriteOp(false).build();
 
         Lgraph.LGraphResponse response = tuGraphService.HandleRequest(request);
         if (response.getErrorCode().getNumber() != Lgraph.LGraphResponse.ErrorCode.SUCCESS_VALUE) {
