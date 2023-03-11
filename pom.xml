@@ -65,6 +65,7 @@
 
     <modules>
         <module>rpc-client</module>
+        <module>rpc-client-test</module>
         <module>ogm</module>
     </modules>
 
@@ -401,12 +402,4 @@
             <artifactId>brpc-java-naming-consul</artifactId>
         </dependency>
     </dependencies>
-
-    <repositories>
-        <repository>
-            <id>aliyun</id>
-            <name>AliYun</name>
-            <url>https://maven.aliyun.com/repository/public</url>
-        </repository>
-    </repositories>
 </project>

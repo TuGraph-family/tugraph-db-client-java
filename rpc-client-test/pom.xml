@@ -8,15 +8,10 @@
         <version>1.1.0</version>
     </parent>
 
-    <artifactId>tugraph-db-java-rpc-client</artifactId>
+    <artifactId>tugraph-db-java-rpc-client-test</artifactId>
     <packaging>jar</packaging>
-
     <name>${project.artifactId}</name>
-    <description>TuGraph-DB Java Client using BRPC</description>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+    <description>TuGraph-DB Java Client Test Library for Integration Test</description>
 
     <build>
         <plugins>
@@ -46,6 +41,7 @@
                 <artifactId>maven-source-plugin</artifactId>
             </plugin>
 
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -57,8 +53,30 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.antgroup.tugraph.TuGraphDbRpcClientTest</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.3.0</version>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.antgroup.tugraph.TuGraphDbRpcClientTest</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
                 <executions>
                     <execution>
                         <id>assemble-all</id>
@@ -74,51 +92,38 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.baidu</groupId>
-            <artifactId>brpc-java</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.baidu</groupId>
-            <artifactId>brpc-spring</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.baidu</groupId>
-            <artifactId>brpc-java-naming-zookeeper</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.baidu</groupId>
-            <artifactId>brpc-java-naming-consul</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.2.3</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jcl-over-slf4j</artifactId>
-            <version>1.7.25</version>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
+            <groupId>com.antgroup.tugraph</groupId>
+            <artifactId>tugraph-db-java-rpc-client</artifactId>
+            <version>1.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
             <version>1.2.83</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>2.13.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.17.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.16</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
-
 </project>

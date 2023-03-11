@@ -29,7 +29,7 @@
 
     <artifactId>tugraph-db-ogm-api</artifactId>
 
-    <name>TuGraph-DB-OGM Api</name>
+    <name>tugraph-db-ogm API</name>
     <description>TuGraph-DB-OGM's internal Api for connecting different transports.</description>
 
     <properties>

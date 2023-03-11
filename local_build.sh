@@ -1,18 +1,17 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
+# env config
 export MAVEN_OPTS=-Xss10m
-
-# Add huawei mirror for parent repos
 mkdir -p ~/.m2
 echo "<settings>
   <mirrors>
     <mirror>
-      <id>huaweicloud</id>
-      <mirrorOf>*</mirrorOf>
-      <url>https://repo.huaweicloud.com/repository/maven/</url>
+      <id>alimaven</id>
+      <mirrorOf>central</mirrorOf>
+      <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
     </mirror>
   </mirrors>
 </settings>" > ~/.m2/settings.xml
 
-mvn clean install -DskipTests
-
+# build all
+mvn clean -f  ../../deps/tugraph-db-client-java/pom.xml install -DskipTests

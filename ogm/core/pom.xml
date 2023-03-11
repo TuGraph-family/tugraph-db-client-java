@@ -29,7 +29,7 @@
 
     <artifactId>tugraph-db-ogm-core</artifactId>
 
-    <name>TuGraph-DB-OGM Core</name>
+    <name>tugraph-db-ogm core</name>
     <description>TuGraph-DB-OGM is an Object Graph Mapping Library for TuGraph.</description>
 
     <properties>

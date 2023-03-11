@@ -11,7 +11,7 @@
 
     <artifactId>tugraph-db-ogm</artifactId>
     <packaging>pom</packaging>
-    <name>TuGraph-DB-OGM</name>
+    <name>tugraph-db-ogm</name>
     <description>Annotation based Object Graph Mapper for TuGraph Server with Repository and Conversion support
     </description>
 
