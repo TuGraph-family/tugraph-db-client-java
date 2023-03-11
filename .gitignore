@@ -1,0 +1,6 @@
+.idea
+*.iml
+target/
+rpc-client/target/
+# Proto generated files
+rpc-client/src/main/java/lgraph/
