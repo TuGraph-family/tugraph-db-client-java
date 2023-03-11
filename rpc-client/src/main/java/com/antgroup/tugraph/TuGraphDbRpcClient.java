@@ -339,7 +339,7 @@ public class TuGraphDbRpcClient {
         sb.append(schema64);
         sb.append("')");
         String res = callCypher(sb.toString(), graph, timeout);
-        if (!"null".equals(res)) {
+        if (JSONArray.parseArray(res).size() != 0) {
             throw new InputException(res);
         }
         // TODO
@@ -374,7 +374,7 @@ public class TuGraphDbRpcClient {
         sb.append(parseDelimiter(delimiter));
         sb.append("')");
         String res = callCypher(sb.toString(), graph, timeout);
-        if (!"null".equals(res)) {
+        if (JSONArray.parseArray(res).size() != 0) {
             throw new InputException(res);
         }
         // TODO
@@ -407,7 +407,7 @@ public class TuGraphDbRpcClient {
         sb.append(schema64);
         sb.append("')");
         String res = callCypher(sb.toString(), graph, timeout);
-        if (!"null".equals(res)) {
+        if (JSONArray.parseArray(res).size() != 0) {
             throw new InputException(res);
         }
         // TODO
@@ -471,7 +471,7 @@ public class TuGraphDbRpcClient {
                 sb.append(parseDelimiter(delimiter));
                 sb.append("')");
                 String res = callCypher(sb.toString(), graph, timeout);
-                if (!"null".equals(res)) {
+                if (JSONArray.parseArray(res).size() != 0) {
                     throw new InputException(res);
                 }
                 // TODO

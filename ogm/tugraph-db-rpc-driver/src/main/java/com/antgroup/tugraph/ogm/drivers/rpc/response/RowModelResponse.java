@@ -44,12 +44,9 @@ public class RowModelResponse extends RpcResponse<RowModel> {
     protected ArrayList<RowModel> mappingResultToModel(String mappingResult) {
         JSON.DEFAULT_PARSER_FEATURE &= ~Feature.UseBigDecimal.getMask();
         ArrayList<RowModel> models = new ArrayList<>();
-        if (mappingResult.equals("null")) {
-            return models;
-        }
         // Judge result format
-        if (mappingResult.charAt(0) == '[') {
-            JSONArray arrayResult = JSONArray.parseArray(mappingResult);
+        JSONArray arrayResult = JSONArray.parseArray(mappingResult);
+        if (arrayResult.size() > 1) {
             for (int i = 0; i < arrayResult.size(); i++) {
                 JSONObject obj = arrayResult.getJSONObject(i);
                 String[] variables = new String[obj.size()];
@@ -62,8 +59,8 @@ public class RowModelResponse extends RpcResponse<RowModel> {
                 DefaultRowModel model = new DefaultRowModel(values, variables);
                 models.add(model);
             }
-        } else {
-            JSONObject objectResult = JSONObject.parseObject(mappingResult);
+        } else if (arrayResult.size() == 1) {
+            JSONObject objectResult = arrayResult.getJSONObject(0);
             if (objectResult.containsKey("ref0") &&
                 objectResult.containsKey("type")) {
                 // Get CREATE result

@@ -35,7 +35,9 @@ public class TuGraphDbRpcClientTest {
         log.info("----------------testCallPlugin--------------------");
         String result = client.callPlugin("CPP", "sortstr", "gecfb", 1000, false, "default", 1000);
         log.info("testCallPlugin : " + result);
-        JSONObject jsonObject = JSONObject.parseObject(result);
+        JSONArray jsonArray = JSONArray.parseArray(result);
+        assert(jsonArray.size() == 1);
+        JSONObject jsonObject = jsonArray.getJSONObject(0);
         assert(jsonObject.containsKey("result"));
         assert("bcefg".equals(jsonObject.getString("result")));
     }
@@ -96,7 +98,9 @@ public class TuGraphDbRpcClientTest {
         }
         res = client.callCypher("CALL db.edgeLabels()", "default", 10);
         log.info("db.edgeLabels() : " + res);
-        JSONObject jsonObject = JSONObject.parseObject(res);
+        jsonArray = JSONArray.parseArray(res);
+        assert(jsonArray.size() == 1);
+        JSONObject jsonObject = jsonArray.getJSONObject(0);
         assert(jsonObject.containsKey("edgeLabels"));
         assert("PLAY_IN".equals(jsonObject.getString("edgeLabels")));
     }
@@ -140,7 +144,9 @@ public class TuGraphDbRpcClientTest {
         }
         String res = client.callCypher("MATCH (n) RETURN COUNT(n)", "default", 10);
         log.info("MATCH (n) RETURN COUNT(n) : " + res);
-        JSONObject jsonObject = JSONObject.parseObject(res);
+        JSONArray jsonArray = JSONArray.parseArray(res);
+        assert(jsonArray.size() == 1);
+        JSONObject jsonObject = jsonArray.getJSONObject(0);
         assert(jsonObject.containsKey("COUNT(n)"));
         assert(jsonObject.getIntValue("COUNT(n)") == 13);
     }
@@ -191,13 +197,17 @@ public class TuGraphDbRpcClientTest {
         }
         String res = client.callCypher("MATCH (n:Person) RETURN COUNT(n)", "default", 1000);
         log.info("MATCH (n) RETURN COUNT(n) : " + res);
-        JSONObject jsonObject = JSONObject.parseObject(res);
+        JSONArray jsonArray = JSONArray.parseArray(res);
+        assert(jsonArray.size() == 1);
+        JSONObject jsonObject = jsonArray.getJSONObject(0);
         assert(jsonObject.containsKey("COUNT(n)"));
         assert(jsonObject.getIntValue("COUNT(n)") == 13);
 
         res = client.callCypher("match(n) -[r]->(m) return count(r)", "default", 1000);
         log.info("match(n) -[r]->(m) return count(r) : " + res);
-        jsonObject = JSONObject.parseObject(res);
+        jsonArray = JSONArray.parseArray(res);
+        assert(jsonArray.size() == 1);
+        jsonObject = jsonArray.getJSONObject(0);
         assert(jsonObject.containsKey("count(r)"));
         assert(jsonObject.getIntValue("count(r)") == 28);
     }
