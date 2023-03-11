@@ -29,6 +29,7 @@ public class Client {
 
         Driver driver = new RpcDriver();
         baseConfigurationBuilder = new Configuration.Builder()
+            .database("default")
             .uri(databaseUri)
             .verifyConnection(true)
             .credentials(username, password);

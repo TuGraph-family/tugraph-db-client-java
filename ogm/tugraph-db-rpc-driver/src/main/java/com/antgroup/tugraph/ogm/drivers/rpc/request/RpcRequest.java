@@ -70,11 +70,14 @@ public class RpcRequest implements Request {
 
     private final Function<String, String> cypherModification;
 
+    private final String database;
+
     public RpcRequest(TuGraphDbRpcClient rpcClient, ParameterConversion parameterConversion,
-                      Function<String, String> cypherModification) {
+                      Function<String, String> cypherModification, String database) {
         this.rpcClient = rpcClient;
         this.parameterConversion = parameterConversion;
         this.cypherModification = cypherModification;
+        this.database = database;
     }
 
     @Override
@@ -334,7 +337,7 @@ public class RpcRequest implements Request {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Request: {} with params {}", cypher, parameterMap);
             }
-            String result = rpcClient.callCypher(mergeRequest(cypher, parameterMap), "default", 10);
+            String result = rpcClient.callCypher(mergeRequest(cypher, parameterMap), database, 10);
             return result;
         } catch (ClientException | DatabaseException | TransientException ce) {
             throw new CypherException(ce.code(), ce.getMessage(), ce);

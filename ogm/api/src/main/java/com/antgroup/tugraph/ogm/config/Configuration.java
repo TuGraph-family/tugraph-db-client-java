@@ -1,4 +1,5 @@
 /*
+ * Modifications Copyright 2022 "Ant Group"
  * Copyright (c) 2002-2022 "Neo4j,"
  * Neo4j Sweden AB [http://neo4j.com]
  *
@@ -521,7 +522,8 @@ public class Configuration {
          * Set URI of the database.
          * The driver is determined from the URI based on its scheme (http/https for HttpDriver,
          * file for EmbeddedDriver,
-         * bolt for BoltDriver).
+         * bolt for BoltDriver,
+         * list for RpcDriver).
          *
          * @param uri uri of the database
          * @return the changed builder
@@ -701,8 +703,7 @@ public class Configuration {
         }
 
         /**
-         * Configures the database to use. This is only applicable with the bolt transport connected against a
-         * 4.0 database.
+         * Configures the database to use.
          *
          * @param database The default database to use, maybe {@literal null} but not empty. {@literal null} indicates
          *                 default database.

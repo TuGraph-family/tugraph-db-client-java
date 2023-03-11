@@ -61,9 +61,9 @@ public class RpcDriver extends AbstractConfigurableDriver {
     private Credentials credentials;
     private Config driverConfig;
     /**
-     * The database to use, defaults to {@literal null} (Use Neo4j default).
+     * The database to use (Use Tugraph default).
      */
-    private String database = null;
+    private String database = "default";
 
     // required for service loader mechanism
     public RpcDriver() {
@@ -158,7 +158,7 @@ public class RpcDriver extends AbstractConfigurableDriver {
 
     @Override
     public Request request(Transaction transaction) {
-        return new RpcRequest(rpcClient, this.parameterConversion, getCypherModification());
+        return new RpcRequest(rpcClient, this.parameterConversion, getCypherModification(), database);
     }
 
     public <T> T unwrap(Class<T> clazz) {
