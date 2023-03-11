@@ -3,7 +3,7 @@ package com.antgroup.tugraph;
 import com.baidu.brpc.protocol.BrpcMeta;
 import lgraph.Lgraph;
 
-public interface TuGraphService {
+public interface TuGraphDbService {
     /**
      * brpc/sofa：
      * serviceName默认是包名 + 类名，methodName是proto文件Service内对应方法名，

@@ -28,7 +28,7 @@ import java.util.function.Function;
 
 import com.antgroup.tugraph.ogm.drivers.rpc.request.RpcRequest;
 import com.antgroup.tugraph.ogm.drivers.rpc.transaction.RpcTransaction;
-import com.antgroup.tugraph.TuGraphRpcClient;
+import com.antgroup.tugraph.TuGraphDbRpcClient;
 
 import org.neo4j.driver.*;
 import org.neo4j.driver.exceptions.ServiceUnavailableException;
@@ -57,7 +57,7 @@ public class RpcDriver extends AbstractConfigurableDriver {
 
     private final ExceptionTranslator exceptionTranslator = new RpcDriverExceptionTranslator();
 
-    private TuGraphRpcClient rpcClient;
+    private TuGraphDbRpcClient rpcClient;
     private Credentials credentials;
     private Config driverConfig;
     /**
@@ -69,7 +69,7 @@ public class RpcDriver extends AbstractConfigurableDriver {
     public RpcDriver() {
     }
 
-    public RpcDriver(TuGraphRpcClient rpcClient) {
+    public RpcDriver(TuGraphDbRpcClient rpcClient) {
         this.rpcClient = rpcClient;
     }
 
@@ -114,7 +114,7 @@ public class RpcDriver extends AbstractConfigurableDriver {
     }
 
     private void checkClientInitialized() {
-        TuGraphRpcClient client = rpcClient;
+        TuGraphDbRpcClient client = rpcClient;
         if (client == null) {
             synchronized (this) {
                 client = rpcClient;
@@ -137,7 +137,7 @@ public class RpcDriver extends AbstractConfigurableDriver {
         try {
             if (credentials != null) {
                 UsernamePasswordCredentials usernameAndPassword = (UsernamePasswordCredentials) this.credentials;
-                TuGraphRpcClient client = new TuGraphRpcClient(configuration.getURI(), usernameAndPassword.getUsername(), usernameAndPassword.getPassword());
+                TuGraphDbRpcClient client = new TuGraphDbRpcClient(configuration.getURI(), usernameAndPassword.getUsername(), usernameAndPassword.getPassword());
                 rpcClient = client;
             } else {
                 LOGGER.debug("Rpc Driver credentials not supplied");

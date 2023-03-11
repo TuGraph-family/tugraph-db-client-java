@@ -7,22 +7,22 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.antgroup.tugraph</groupId>
-    <artifactId>tugraph-rpc-client-parent</artifactId>
+    <artifactId>tugraph-db-rpc-client-parent</artifactId>
     <version>1.1.0</version>
     <packaging>pom</packaging>
     <name>${project.artifactId}</name>
-    <description>TuGraph Java Client using BRPC</description>
+    <description>TuGraph-DB Java Client using BRPC</description>
 
     <url>https://www.tugraph.org/</url>
     <organization>
         <name>Ant Group</name>
     </organization>
     <scm>
-        <url>https://github.com/TuGraph-db/tugraph-ogm/</url>
+        <url>https://github.com/TuGraph-family/tugraph-db-client-java/</url>
     </scm>
     <issueManagement>
         <system>GitHub Issues</system>
-        <url>https://github.com/TuGraph-db/tugraph-ogm/issues</url>
+        <url>https://github.com/TuGraph-family/tugraph-db-client-java/issues</url>
     </issueManagement>
 
     <developers>

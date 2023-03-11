@@ -23,12 +23,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>com.antgroup.tugraph</groupId>
-        <artifactId>tugraph-ogm</artifactId>
+        <artifactId>tugraph-db-ogm</artifactId>
         <version>1.1.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>tugraph-rpc-driver</artifactId>
+    <artifactId>tugraph-db-rpc-driver</artifactId>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -38,7 +38,7 @@
     <dependencies>
         <dependency>
             <groupId>com.antgroup.tugraph</groupId>
-            <artifactId>tugraph-ogm-api</artifactId>
+            <artifactId>tugraph-db-ogm-api</artifactId>
             <version>1.1.0</version>
         </dependency>
 
@@ -62,8 +62,7 @@
 
         <dependency>
             <groupId>com.antgroup.tugraph</groupId>
-            <artifactId>tugraph-java-rpc-client</artifactId>
-            <version>0.0.1</version>
+            <artifactId>tugraph-db-java-rpc-client</artifactId>
         </dependency>
 
         <dependency>

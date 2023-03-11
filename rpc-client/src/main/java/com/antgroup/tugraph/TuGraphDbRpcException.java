@@ -2,13 +2,13 @@ package com.antgroup.tugraph;
 
 import lgraph.Lgraph;
 
-public class TuGraphRpcException extends RuntimeException {
+public class TuGraphDbRpcException extends RuntimeException {
     private static final long serialVersionUID = 7382581401295703844L;
     public Lgraph.LGraphResponse.ErrorCode errorCode;
     public String error;
     public String errorMethod;
 
-    public TuGraphRpcException(Lgraph.LGraphResponse.ErrorCode errorCode, String error, String errorMethod) {
+    public TuGraphDbRpcException(Lgraph.LGraphResponse.ErrorCode errorCode, String error, String errorMethod) {
         super(error);
         this.errorCode = errorCode;
         this.error = error;

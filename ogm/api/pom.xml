@@ -23,14 +23,14 @@
 
     <parent>
         <groupId>com.antgroup.tugraph</groupId>
-        <artifactId>tugraph-ogm</artifactId>
+        <artifactId>tugraph-db-ogm</artifactId>
         <version>1.1.0</version>
     </parent>
 
-    <artifactId>tugraph-ogm-api</artifactId>
+    <artifactId>tugraph-db-ogm-api</artifactId>
 
-    <name>TuGraph-OGM Api</name>
-    <description>TuGraph-OGM's internal Api for connecting different transports.</description>
+    <name>TuGraph-DB-OGM Api</name>
+    <description>TuGraph-DB-OGM's internal Api for connecting different transports.</description>
 
     <properties>
         <java-module-name>com.antgroup.tugraph.ogm.drivers.api</java-module-name>

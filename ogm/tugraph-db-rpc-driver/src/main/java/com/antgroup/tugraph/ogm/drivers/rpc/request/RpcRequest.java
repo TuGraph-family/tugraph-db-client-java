@@ -32,7 +32,7 @@ import com.antgroup.tugraph.ogm.drivers.rpc.response.GraphModelResponse;
 import com.antgroup.tugraph.ogm.drivers.rpc.response.GraphRowModelResponse;
 import com.antgroup.tugraph.ogm.drivers.rpc.response.RestModelResponse;
 import com.antgroup.tugraph.ogm.drivers.rpc.response.RowModelResponse;
-import com.antgroup.tugraph.TuGraphRpcClient;
+import com.antgroup.tugraph.TuGraphDbRpcClient;
 
 import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.driver.exceptions.DatabaseException;
@@ -64,14 +64,14 @@ public class RpcRequest implements Request {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RpcRequest.class);
 
-    private final TuGraphRpcClient rpcClient;
+    private final TuGraphDbRpcClient rpcClient;
 
     private final ParameterConversion parameterConversion;
 
     private final Function<String, String> cypherModification;
 
-    public RpcRequest(TuGraphRpcClient rpcClient, ParameterConversion parameterConversion,
-        Function<String, String> cypherModification) {
+    public RpcRequest(TuGraphDbRpcClient rpcClient, ParameterConversion parameterConversion,
+                      Function<String, String> cypherModification) {
         this.rpcClient = rpcClient;
         this.parameterConversion = parameterConversion;
         this.cypherModification = cypherModification;

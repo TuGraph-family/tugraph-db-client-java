@@ -21,23 +21,23 @@ import java.util.List;
 
 @SuppressWarnings("unchecked")
 @Slf4j
-public class TuGraphRpcClient {
+public class TuGraphDbRpcClient {
 
     private RpcClient client;
-    private TuGraphService tuGraphService;
+    private TuGraphDbService tuGraphService;
     private String token;
     private String url;
     private long serverVersion;
     private static final int TIMEOUTINMS = 60 * 60 * 1000;
 
-    public TuGraphRpcClient(String url, String user, String pass) {
+    public TuGraphDbRpcClient(String url, String user, String pass) {
         RpcClientOptions options = new RpcClientOptions();
         options.setProtocolType(Options.ProtocolType.PROTOCOL_BAIDU_STD_VALUE);
         options.setLoadBalanceType(LoadBalanceStrategy.LOAD_BALANCE_FAIR);
         options.setWriteTimeoutMillis(TIMEOUTINMS);
         options.setReadTimeoutMillis(TIMEOUTINMS);
         client = new RpcClient(url, options);
-        tuGraphService = BrpcProxy.getProxy(client, TuGraphService.class);
+        tuGraphService = BrpcProxy.getProxy(client, TuGraphDbService.class);
         Lgraph.LoginRequest loginReq = Lgraph.LoginRequest.newBuilder().setUser(user).setPassword(pass).build();
         Lgraph.AuthRequest authReq = Lgraph.AuthRequest.newBuilder().setLogin(loginReq).build();
         Lgraph.AclRequest req = Lgraph.AclRequest.newBuilder().setAuthRequest(authReq).build();
@@ -45,7 +45,7 @@ public class TuGraphRpcClient {
 
         Lgraph.LGraphResponse response = tuGraphService.HandleRequest(request);
         if (response.getErrorCode().getNumber() != Lgraph.LGraphResponse.ErrorCode.SUCCESS_VALUE) {
-            throw new TuGraphRpcException(response.getErrorCode(), response.getError(), "TuGraphRpcClient");
+            throw new TuGraphDbRpcException(response.getErrorCode(), response.getError(), "TuGraphRpcClient");
         }
         this.token = response.getAclResponse().getAuthResponse().getToken();
         this.serverVersion = response.getServerVersion();
@@ -61,7 +61,7 @@ public class TuGraphRpcClient {
         Lgraph.LGraphRequest request = Lgraph.LGraphRequest.newBuilder().setCypherRequest(cypherRequest).setToken(this.token).setClientVersion(serverVersion).build();
         Lgraph.LGraphResponse response = tuGraphService.HandleRequest(request);
         if (response.getErrorCode().getNumber() != Lgraph.LGraphResponse.ErrorCode.SUCCESS_VALUE) {
-            throw new TuGraphRpcException(response.getErrorCode(), response.getError(), "CallCypher");
+            throw new TuGraphDbRpcException(response.getErrorCode(), response.getError(), "CallCypher");
         }
         serverVersion = response.getServerVersion() > serverVersion ? response.getServerVersion() : serverVersion;
         return response.getCypherResponse().getJsonResult();
@@ -493,7 +493,7 @@ public class TuGraphRpcClient {
 
         Lgraph.LGraphResponse response = tuGraphService.HandleRequest(request);
         if (response.getErrorCode().getNumber() != Lgraph.LGraphResponse.ErrorCode.SUCCESS_VALUE) {
-            throw new TuGraphRpcException(response.getErrorCode(), response.getError(), "TuGraphRpcClient");
+            throw new TuGraphDbRpcException(response.getErrorCode(), response.getError(), "TuGraphRpcClient");
         }
     }
 

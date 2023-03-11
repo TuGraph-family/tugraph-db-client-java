@@ -23,24 +23,23 @@
 
     <parent>
         <groupId>com.antgroup.tugraph</groupId>
-        <artifactId>tugraph-ogm</artifactId>
+        <artifactId>tugraph-db-ogm</artifactId>
         <version>1.1.0</version>
     </parent>
 
-    <artifactId>tugraph-ogm-core</artifactId>
+    <artifactId>tugraph-db-ogm-core</artifactId>
 
-    <name>TuGraph-OGM Core</name>
-    <description>TuGraph-OGM is an Object Graph Mapping Library for TuGraph.</description>
+    <name>TuGraph-DB-OGM Core</name>
+    <description>TuGraph-DB-OGM is an Object Graph Mapping Library for TuGraph.</description>
 
     <properties>
-        <java-module-name>org.neo4j.ogm.core</java-module-name>
         <mockk.version>1.9.3</mockk.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.antgroup.tugraph</groupId>
-            <artifactId>tugraph-ogm-api</artifactId>
+            <artifactId>tugraph-db-ogm-api</artifactId>
             <version>1.1.0</version>
         </dependency>
 

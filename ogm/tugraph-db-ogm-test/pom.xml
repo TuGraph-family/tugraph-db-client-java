@@ -25,11 +25,11 @@
 
     <parent>
         <groupId>com.antgroup.tugraph</groupId>
-        <artifactId>tugraph-ogm</artifactId>
+        <artifactId>tugraph-db-ogm</artifactId>
         <version>1.1.0</version>
     </parent>
 
-    <artifactId>tugraph-ogm-test</artifactId>
+    <artifactId>tugraph-db-ogm-test</artifactId>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -40,19 +40,19 @@
     <dependencies>
         <dependency>
             <groupId>com.antgroup.tugraph</groupId>
-            <artifactId>tugraph-ogm-api</artifactId>
+            <artifactId>tugraph-db-ogm-api</artifactId>
             <version>1.1.0</version>
         </dependency>
 
         <dependency>
             <groupId>com.antgroup.tugraph</groupId>
-            <artifactId>tugraph-ogm-core</artifactId>
+            <artifactId>tugraph-db-ogm-core</artifactId>
             <version>1.1.0</version>
         </dependency>
 
         <dependency>
             <groupId>com.antgroup.tugraph</groupId>
-            <artifactId>tugraph-rpc-driver</artifactId>
+            <artifactId>tugraph-db-rpc-driver</artifactId>
             <version>1.1.0</version>
         </dependency>
 

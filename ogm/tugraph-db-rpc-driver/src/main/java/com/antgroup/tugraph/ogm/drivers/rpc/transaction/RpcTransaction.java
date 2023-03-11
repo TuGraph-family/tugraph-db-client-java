@@ -19,7 +19,7 @@
  */
 package com.antgroup.tugraph.ogm.drivers.rpc.transaction;
 
-import com.antgroup.tugraph.TuGraphRpcClient;
+import com.antgroup.tugraph.TuGraphDbRpcClient;
 
 import com.antgroup.tugraph.ogm.transaction.AbstractTransaction;
 import com.antgroup.tugraph.ogm.transaction.TransactionManager;
@@ -33,10 +33,10 @@ import org.slf4j.LoggerFactory;
  */
 public class RpcTransaction extends AbstractTransaction {
 
-    private final TuGraphRpcClient rpcClient;
+    private final TuGraphDbRpcClient rpcClient;
     private final Logger LOGGER = LoggerFactory.getLogger(RpcTransaction.class);
 
-    public RpcTransaction(TransactionManager transactionManager, TuGraphRpcClient rpcClient, Type type) {
+    public RpcTransaction(TransactionManager transactionManager, TuGraphDbRpcClient rpcClient, Type type) {
         super(transactionManager);
         this.rpcClient = rpcClient;
         this.type = type;
