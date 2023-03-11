@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.antgroup.tugraph</groupId>
         <artifactId>tugraph-db-rpc-client-parent</artifactId>
-        <version>1.2.0</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>tugraph-db-java-rpc-client</artifactId>
@@ -16,6 +16,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <slf4j.version>1.7.25</slf4j.version>
+        <logback.version>1.2.3</logback.version>
     </properties>
 
     <build>
@@ -116,12 +118,12 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.2.3</version>
+            <version>${logback.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
-            <version>1.7.25</version>
+            <version>${slf4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -141,7 +143,6 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
-            <version>1.2.83</version>
         </dependency>
     </dependencies>
 

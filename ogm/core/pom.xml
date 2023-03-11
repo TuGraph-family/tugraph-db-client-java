@@ -24,7 +24,7 @@
     <parent>
         <groupId>com.antgroup.tugraph</groupId>
         <artifactId>tugraph-db-ogm</artifactId>
-        <version>1.2.0</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>tugraph-db-ogm-core</artifactId>
@@ -33,13 +33,14 @@
 
     <properties>
         <mockk.version>1.9.3</mockk.version>
+        <ogm.api.version>${revision}</ogm.api.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.antgroup.tugraph</groupId>
             <artifactId>tugraph-db-ogm-api</artifactId>
-            <version>1.2.0</version>
+            <version>${ogm.api.version}</version>
         </dependency>
 
         <dependency>

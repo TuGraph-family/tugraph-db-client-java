@@ -24,7 +24,7 @@
     <parent>
         <groupId>com.antgroup.tugraph</groupId>
         <artifactId>tugraph-db-ogm</artifactId>
-        <version>1.2.0</version>
+        <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -33,13 +33,14 @@
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <ogm.api.version>${revision}</ogm.api.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.antgroup.tugraph</groupId>
             <artifactId>tugraph-db-ogm-api</artifactId>
-            <version>1.2.0</version>
+            <version>${ogm.api.version}</version>
         </dependency>
         <dependency>
             <groupId>org.neo4j.driver</groupId>
