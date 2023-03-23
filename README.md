@@ -22,7 +22,7 @@ If you are using Maven to manage the dependency in your Java project, you can ad
 ```xml
 <dependency>
     <groupId>com.antgroup.tugraph</groupId>
-    <artifactId>tugraph-java-rpc-client</artifactId>
+    <artifactId>tugraph-db-java-rpc-client</artifactId>
     <version>1.2.1</version>
 </dependency>
 ```
@@ -31,28 +31,28 @@ If you are using Maven to manage the dependency in your Java project, you can ad
 ```
 <dependency>
     <groupId>com.antgroup.tugraph</groupId>
-    <artifactId>tugraph-ogm-api</artifactId>
+    <artifactId>tugraph-db-ogm-api</artifactId>
     <version>1.2.1</version>
 </dependency>
 <dependency>
     <groupId>com.antgroup.tugraph</groupId>
-    <artifactId>tugraph-ogm-core</artifactId>
+    <artifactId>tugraph-db-ogm-core</artifactId>
     <version>1.2.1</version>
 </dependency>
 <dependency>
     <groupId>com.antgroup.tugraph</groupId>
-    <artifactId>tugraph-rpc-driver</artifactId>
+    <artifactId>tugraph-db-rpc-driver</artifactId>
     <version>1.2.1</version>
 </dependency>
 ```
 
 ### Java client usage
 
-Please refer to `demo/JavaClientDemo/` in TuGraph repo.
+Please refer to `demo/JavaClientDemo/` in TuGraph-db repo.
 
 ### OGM usage
 
-Note: You can refer to the module tugraph-ogm-tests for more detail.
+Note: You can refer to the module tugraph-db-ogm-tests for more detail.
 
 #### Define the entity and mapping
 
