@@ -375,8 +375,8 @@ public class TuGraphDbRpcClient {
                 + schema64
                 + "')";
         String res = callCypher(sb, graph, timeout);
-        // the built-in procedure always returns null.
-        if (!StringUtils.isBlank(res)) {
+        // this built-in procedure always returns "[]" for null.
+        if (JSONArray.parseArray(res).size() != 0) {
             throw new InputException(res);
         }
         return true;
@@ -400,8 +400,8 @@ public class TuGraphDbRpcClient {
                 + parseDelimiter(delimiter)
                 + "')";
         String res = callCypher(sb, graph, timeout);
-        // the built-in procedure always returns null.
-        if (!StringUtils.isBlank(res)) {
+        // this built-in procedure always returns "[]" for null.
+        if (JSONArray.parseArray(res).size() != 0) {
             throw new InputException(res);
         }
         return true;
@@ -424,10 +424,10 @@ public class TuGraphDbRpcClient {
                 + schema64
                 + "')";
         String res = callCypher(sb, graph, timeout);
-        // the built-in procedure always returns null.
-         if (!StringUtils.isBlank(res)) {
-             throw new InputException(res);
-         }
+        // this built-in procedure always returns "[]" for null.
+        if (JSONArray.parseArray(res).size() != 0) {
+            throw new InputException(res);
+        }
         return true;
     }
 
@@ -488,8 +488,8 @@ public class TuGraphDbRpcClient {
                 if (JSONArray.parseArray(res).size() != 0) {
                     throw new InputException(res);
                 }
-                // the built-in procedure always returns null.
-                if (!StringUtils.isBlank(res)) {
+                // this built-in procedure always returns "[]" for null.
+                if (JSONArray.parseArray(res).size() != 0) {
                     throw new InputException(res);
                 }
                 buf = cutter.cut();
