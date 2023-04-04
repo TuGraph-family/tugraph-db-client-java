@@ -15,6 +15,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -60,9 +61,11 @@ public class TuGraphDbRpcClient {
 
     private String handleCypherRequest(String query, String graph, double timeout) {
         Lgraph.CypherRequest cypherRequest =
-                Lgraph.CypherRequest.newBuilder().setQuery(query).setResultInJsonFormat(true).setGraph(graph).setTimeout(timeout).build();
+                Lgraph.CypherRequest.newBuilder().setQuery(query).setResultInJsonFormat(true).setGraph(graph)
+                                    .setTimeout(timeout).build();
         Lgraph.LGraphRequest request =
-                Lgraph.LGraphRequest.newBuilder().setCypherRequest(cypherRequest).setToken(this.token).setClientVersion(serverVersion).build();
+                Lgraph.LGraphRequest.newBuilder().setCypherRequest(cypherRequest).setToken(this.token)
+                                    .setClientVersion(serverVersion).build();
         Lgraph.LGraphResponse response = tuGraphService.HandleRequest(request);
         if (response.getErrorCode().getNumber() != Lgraph.LGraphResponse.ErrorCode.SUCCESS_VALUE) {
             throw new TuGraphDbRpcException(response.getErrorCode(), response.getError(), "CallCypher");
@@ -130,7 +133,7 @@ public class TuGraphDbRpcClient {
                                 temp = temp * 16 + (delimiter.charAt(idx) - 'A' + 10);
                             } else {
                                 throw new InputException("Illegal escape sequence: " + delimiter.substring(begin,
-                                        idx + 1));
+                                                                                                           idx + 1));
                             }
                             ++idx;
                         }
@@ -145,11 +148,11 @@ public class TuGraphDbRpcClient {
                                 char sc = delimiter.charAt(idx);
                                 if (idx == size) {
                                     throw new InputException("Illegal escape sequence: " + delimiter.substring(begin,
-                                            idx));
+                                                                                                               idx));
                                 }
                                 if (sc < '0' || sc > '7') {
                                     throw new InputException("Illegal escape sequence: " + delimiter.substring(begin,
-                                            idx + 1));
+                                                                                                               idx + 1));
                                 }
                                 temp = temp * 8 + sc - '0';
                                 ++idx;
@@ -334,7 +337,7 @@ public class TuGraphDbRpcClient {
     }
 
     public String callPlugin(String pluginType, String pluginName, String param, double pluginTimeOut,
-                                boolean inProcess, String graph, double timeout) {
+                             boolean inProcess, String graph, double timeout) {
         Lgraph.PluginRequest.PluginType type =
                 pluginType.equals("CPP") ? Lgraph.PluginRequest.PluginType.CPP : Lgraph.PluginRequest.PluginType.PYTHON;
         ByteString resp = callPlugin(type, pluginName, ByteString.copyFromUtf8(param), graph, pluginTimeOut, inProcess);
@@ -352,7 +355,8 @@ public class TuGraphDbRpcClient {
     public ByteString callPlugin(Lgraph.PluginRequest.PluginType type, String name, ByteString param,
                                  String graph, double timeout, boolean inProcess) {
         Lgraph.CallPluginRequest vreq =
-                Lgraph.CallPluginRequest.newBuilder().setName(name).setParam(param).setTimeout(timeout).setInProcess(inProcess).build();
+                Lgraph.CallPluginRequest.newBuilder().setName(name).setParam(param).setTimeout(timeout)
+                                        .setInProcess(inProcess).build();
         Lgraph.PluginRequest req =
                 Lgraph.PluginRequest.newBuilder().setType(type).setCallPluginRequest(vreq).setGraph(graph).build();
         Lgraph.LGraphRequest request =
@@ -365,60 +369,41 @@ public class TuGraphDbRpcClient {
     }
 
     public boolean importSchemaFromContent(String schema, String graph, double timeout) throws UnsupportedEncodingException {
-        byte[] textByte = new byte[0];
-        try {
-            textByte = schema.getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw e;
-        }
+        byte[] textByte = schema.getBytes(StandardCharsets.UTF_8);
         String schema64 = Base64.getEncoder().encodeToString(textByte);
-        StringBuilder sb = new StringBuilder();
-        sb.append("CALL db.importor.schemaImportor('");
-        sb.append(schema64);
-        sb.append("')");
-        String res = callCypher(sb.toString(), graph, timeout);
-        if (JSONArray.parseArray(res).size() != 0) {
+        String sb = "CALL db.importor.schemaImportor('"
+                + schema64
+                + "')";
+        String res = callCypher(sb, graph, timeout);
+        // the built-in procedure always returns null.
+        if (!StringUtils.isBlank(res)) {
             throw new InputException(res);
         }
-        // TODO
-//         if (!StringUtils.isBlank(res)) {
-//             throw new InputException(res);
-//         }
         return true;
     }
 
     public boolean importDataFromContent(String desc, String data, String delimiter,
                                          boolean continueOnError, int threadNums, String graph, double timeout) throws UnsupportedEncodingException {
-        byte[] textByteDesc = new byte[0];
-        byte[] textByteData = new byte[0];
-        try {
-            textByteDesc = desc.getBytes("UTF-8");
-            textByteData = data.getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw e;
-        }
+        byte[] textByteDesc = desc.getBytes(StandardCharsets.UTF_8);
+        byte[] textByteData = data.getBytes(StandardCharsets.UTF_8);
         String desc64 = Base64.getEncoder().encodeToString(textByteDesc);
         String data64 = Base64.getEncoder().encodeToString(textByteData);
-        StringBuilder sb = new StringBuilder();
-        sb.append("CALL db.importor.dataImportor('");
-        sb.append(desc64);
-        sb.append("','");
-        sb.append(data64);
-        sb.append("',");
-        sb.append(continueOnError);
-        sb.append(",");
-        sb.append(threadNums);
-        sb.append(",'");
-        sb.append(parseDelimiter(delimiter));
-        sb.append("')");
-        String res = callCypher(sb.toString(), graph, timeout);
-        if (JSONArray.parseArray(res).size() != 0) {
+        String sb = "CALL db.importor.dataImportor('"
+                + desc64
+                + "','"
+                + data64
+                + "',"
+                + continueOnError
+                + ","
+                + threadNums
+                + ",'"
+                + parseDelimiter(delimiter)
+                + "')";
+        String res = callCypher(sb, graph, timeout);
+        // the built-in procedure always returns null.
+        if (!StringUtils.isBlank(res)) {
             throw new InputException(res);
         }
-        // TODO
-//         if (!StringUtils.isBlank(res)) {
-//             throw new InputException(res);
-//         }
         return true;
     }
 
@@ -433,25 +418,16 @@ public class TuGraphDbRpcClient {
         }
         JSONObject schema = new JSONObject();
         schema.put("schema", jsonObject.getJSONArray("schema"));
-        byte[] textByte = new byte[0];
-        try {
-            textByte = schema.toJSONString().getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw e;
-        }
+        byte[] textByte = schema.toJSONString().getBytes(StandardCharsets.UTF_8);
         String schema64 = Base64.getEncoder().encodeToString(textByte);
-        StringBuilder sb = new StringBuilder();
-        sb.append("CALL db.importor.schemaImportor('");
-        sb.append(schema64);
-        sb.append("')");
-        String res = callCypher(sb.toString(), graph, timeout);
-        if (JSONArray.parseArray(res).size() != 0) {
-            throw new InputException(res);
-        }
-        // TODO
-//         if (!StringUtils.isBlank(res)) {
-//             throw new InputException(res);
-//         }
+        String sb = "CALL db.importor.schemaImportor('"
+                + schema64
+                + "')";
+        String res = callCypher(sb, graph, timeout);
+        // the built-in procedure always returns null.
+         if (!StringUtils.isBlank(res)) {
+             throw new InputException(res);
+         }
         return true;
     }
 
@@ -497,26 +473,25 @@ public class TuGraphDbRpcClient {
                 }
                 String desc64 = Base64.getEncoder().encodeToString(desc);
                 String content64 = Base64.getEncoder().encodeToString(buf);
-                StringBuilder sb = new StringBuilder();
-                sb.append("CALL db.importor.dataImportor('");
-                sb.append(desc64);
-                sb.append("','");
-                sb.append(content64);
-                sb.append("',");
-                sb.append(continueOnError);
-                sb.append(",");
-                sb.append(threadNums);
-                sb.append(",'");
-                sb.append(parseDelimiter(delimiter));
-                sb.append("')");
-                String res = callCypher(sb.toString(), graph, timeout);
+                String sb = "CALL db.importor.dataImportor('"
+                        + desc64
+                        + "','"
+                        + content64
+                        + "',"
+                        + continueOnError
+                        + ","
+                        + threadNums
+                        + ",'"
+                        + parseDelimiter(delimiter)
+                        + "')";
+                String res = callCypher(sb, graph, timeout);
                 if (JSONArray.parseArray(res).size() != 0) {
                     throw new InputException(res);
                 }
-                // TODO
-                //         if (!StringUtils.isBlank(res)) {
-                //             throw new InputException(res);
-                //         }
+                // the built-in procedure always returns null.
+                if (!StringUtils.isBlank(res)) {
+                    throw new InputException(res);
+                }
                 buf = cutter.cut();
             }
         }
