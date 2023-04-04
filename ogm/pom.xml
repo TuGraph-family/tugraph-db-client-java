@@ -48,7 +48,6 @@
         <maven-enforcer-plugin.version>3.0.0-M2</maven-enforcer-plugin.version>
         <maven-deploy-plugin.version>3.0.0-M1</maven-deploy-plugin.version>
         <maven-install-plugin.version>3.0.0-M1</maven-install-plugin.version>
-        <maven-javadoc-plugin.version>3.0.1</maven-javadoc-plugin.version>
         <maven-site-plugin.version>3.7.1</maven-site-plugin.version>
         <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M2</maven-surefire-plugin.version>
@@ -237,27 +236,6 @@
     </dependencyManagement>
 
     <build>
-        <resources>
-            <resource>
-                <directory>${project.basedir}</directory>
-                <includes>
-                    <include>CHANGES.txt</include>
-                    <include>README.md</include>
-                </includes>
-                <targetPath>META-INF</targetPath>
-            </resource>
-
-            <resource>
-                <directory>src/main/resources/META-INF/services</directory>
-                <targetPath>META-INF/services</targetPath>
-            </resource>
-
-            <resource>
-                <directory>src/main/resources/META-INF/native-image</directory>
-                <targetPath>META-INF/native-image</targetPath>
-            </resource>
-
-        </resources>
         <testResources>
             <testResource>
                 <directory>src/test/resources</directory>
@@ -396,58 +374,8 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>${maven-javadoc-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <!--
-                Check for some javadoc issues, but not for all missing @param and @return etc..
-                See http://docs.oracle.com/javase/8/docs/technotes/tools/windows/javadoc.html#BEJEFABE
-                -->
-                <configuration>
-                    <doclint>syntax</doclint>
-                    <doclint>html</doclint>
-                    <tags>
-                        <tag>
-                            <name>soundtrack</name>
-                            <placement>X</placement>
-                        </tag>
-                    </tags>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
                 <version>${maven-deploy-plugin.version}</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>${maven-jar-plugin.version}</version>
-                <configuration>
-                    <archive>
-                        <addMavenDescriptor>false</addMavenDescriptor>
-                        <manifestEntries>
-                            <Implementation-Title>${project.name}</Implementation-Title>
-                            <Implementation-Version>${project.version}</Implementation-Version>
-                            <Automatic-Module-Name>${java-module-name}</Automatic-Module-Name>
-                        </manifestEntries>
-                    </archive>
-                    <skipIfEmpty>true</skipIfEmpty>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
