@@ -236,27 +236,6 @@
     </dependencyManagement>
 
     <build>
-        <resources>
-            <resource>
-                <directory>${project.basedir}</directory>
-                <includes>
-                    <include>CHANGES.txt</include>
-                    <include>README.md</include>
-                </includes>
-                <targetPath>META-INF</targetPath>
-            </resource>
-
-            <resource>
-                <directory>src/main/resources/META-INF/services</directory>
-                <targetPath>META-INF/services</targetPath>
-            </resource>
-
-            <resource>
-                <directory>src/main/resources/META-INF/native-image</directory>
-                <targetPath>META-INF/native-image</targetPath>
-            </resource>
-
-        </resources>
         <testResources>
             <testResource>
                 <directory>src/test/resources</directory>
