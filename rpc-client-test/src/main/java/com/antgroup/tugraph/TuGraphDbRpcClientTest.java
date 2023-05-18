@@ -2,8 +2,6 @@ package com.antgroup.tugraph;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.antgroup.tugraph.TuGraphDbRpcClient;
-import com.antgroup.tugraph.TuGraphDbRpcException;
 import com.google.protobuf.ByteString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,18 +13,50 @@ public class TuGraphDbRpcClientTest {
     static Logger log = LoggerFactory.getLogger(TuGraphDbRpcClientTest.class);
 
 
+    public static void loadPlugin(TuGraphDbRpcClient client) {
+        log.info("----------------testLoadPlugin--------------------");
+        try {
+            client.callCypher("CALL db.dropDB()", "default", 10);
+            boolean result = client.loadPlugin("./sortstr.so", "CPP", "sortstr", "SO", "test sortstr", true,
+                    "default"
+                    , 1000);
+            log.info("loadPlugin : " + result);
+            assert (result);
+            // should throw TuGraphDbRpcException
+            result = client.loadPlugin("./scan_graph.so", "CPP", "scan_graph", "SO", "test scan_graph", true,
+                    "default", 1000);
+            log.info("loadPlugin : " + result);
+        } catch (IOException e) {
+            log.info("catch IOException : " + e.getMessage());
+        } catch (TuGraphDbRpcException e) {
+            log.info("catch TuGraphDbRpcException : " + e.getMessage());
+        }
+    }
+
+    public static void deleteProcedure(TuGraphDbRpcClient client) {
+        log.info("----------------testDeleteProcedure--------------------");
+        try {
+            boolean result = client.deleteProcedure("CPP", "sortstr", "default");
+            log.info("deleteProcedure : " + result);
+            assert (result);
+            // should throw TuGraphDbRpcException
+            result = client.deleteProcedure("CPP", "scan_graph", "default");
+            log.info("loadProcedure : " + result);
+        } catch (TuGraphDbRpcException e) {
+            log.info("catch TuGraphDbRpcException : " + e.getMessage());
+        }
+    }
+
     public static void loadProcedure(TuGraphDbRpcClient client) {
         log.info("----------------testLoadProcedure--------------------");
         try {
-            client.callCypher("CALL db.dropDB()", "default", 10);
             boolean result = client.loadProcedure("./sortstr.so", "CPP", "sortstr", "SO", "test sortstr", true,
-                    "default"
-                    , 1000);
+                    "default");
             log.info("loadProcedure : " + result);
             assert (result);
             // should throw TuGraphDbRpcException
             result = client.loadProcedure("./scan_graph.so", "CPP", "scan_graph", "SO", "test scan_graph", true,
-                    "default", 1000);
+                    "default");
             log.info("loadProcedure : " + result);
         } catch (IOException e) {
             log.info("catch IOException : " + e.getMessage());
@@ -35,30 +65,30 @@ public class TuGraphDbRpcClientTest {
         }
     }
 
-    public static void listPlugins(TuGraphDbRpcClient client) {
-        log.info("----------------testListPlugins--------------------");
-        String result = client.listPlugins("CPP", "default");
-        log.info("testListPlugin: " + result);
+    public static void listProcedures(TuGraphDbRpcClient client) {
+        log.info("----------------testListProcedures--------------------");
+        String result = client.listProcedures("CPP", "default");
+        log.info("testListProcedure: " + result);
         JSONArray jsonArray = JSONArray.parseArray(result);
         assert (jsonArray.size() == 2);
     }
 
-    public static void callPlugin(TuGraphDbRpcClient client) {
-        log.info("----------------testCallPlugin--------------------");
-        String result1 = client.callPlugin("CPP", "sortstr", ByteString.copyFromUtf8("gecfb"), "default", 1000
+    public static void callProcedure(TuGraphDbRpcClient client) {
+        log.info("----------------testCallProcedure--------------------");
+        String result1 = client.callProcedure("CPP", "sortstr", ByteString.copyFromUtf8("gecfb"), "default", 1000
                 , false);
-        log.info("testCallPlugin 1: " + result1);
+        log.info("testCallProcedure 1: " + result1);
         assert ("bcefg".equals(result1));
 
-        String result2 = client.callPlugin("CPP", "sortstr", "gecfb", 1000, false, "default", 1000);
-        log.info("testCallPlugin 2: " + result2);
+        String result2 = client.callProcedure("CPP", "sortstr", "gecfb", 1000, false, "default");
+        log.info("testCallProcedure 2: " + result2);
         assert ("bcefg".equals(result2));
     }
 
-    public static void callProcedure(TuGraphDbRpcClient client) {
-        log.info("----------------testCallProcedure--------------------");
-        String result = client.callProcedure("CPP", "sortstr", "gecfb", 1000, false, "default", 1000);
-        log.info("testCallProcedure : " + result);
+    public static void callPlugin(TuGraphDbRpcClient client) {
+        log.info("----------------testCallPlugin--------------------");
+        String result = client.callPlugin("CPP", "sortstr", "gecfb", 1000, false, "default", 1000);
+        log.info("testCallPlugin : " + result);
         JSONArray jsonArray = JSONArray.parseArray(result);
         assert (jsonArray.size() == 1);
         JSONObject jsonObject = jsonArray.getJSONObject(0);
@@ -116,8 +146,8 @@ public class TuGraphDbRpcClientTest {
         log.info("db.vertexLabels() : " + res);
         JSONArray jsonArray = JSONArray.parseArray(res);
         assert (jsonArray.size() == 2);
-        for (int idx = 0; idx < jsonArray.size(); ++idx) {
-            JSONObject obj = (JSONObject) jsonArray.get(idx);
+        for (Object o : jsonArray) {
+            JSONObject obj = (JSONObject) o;
             assert ("Person".equals(obj.getString("label")) || "Film".equals(obj.getString("label")));
         }
         res = client.callCypher("CALL db.edgeLabels()", "default", 10);
@@ -190,8 +220,8 @@ public class TuGraphDbRpcClientTest {
         log.info("db.vertexLabels() : " + res);
         JSONArray array = JSONArray.parseArray(res);
         assert (array.size() == 3);
-        for (int idx = 0; idx < array.size(); ++idx) {
-            JSONObject obj = (JSONObject) array.get(idx);
+        for (Object o : array) {
+            JSONObject obj = (JSONObject) o;
             assert ("Person".equals(obj.getString("label")) || "Film".equals(obj.getString("label"))
                     || "City".equals(obj.getString("label")));
         }
@@ -200,8 +230,8 @@ public class TuGraphDbRpcClientTest {
         log.info("db.edgeLabels() : " + res);
         array = JSONArray.parseArray(res);
         assert (array.size() == 6);
-        for (int idx = 0; idx < array.size(); ++idx) {
-            JSONObject obj = (JSONObject) array.get(idx);
+        for (Object o : array) {
+            JSONObject obj = (JSONObject) o;
             assert ("HAS_CHILD".equals(obj.getString("edgeLabels")) || "MARRIED".equals(obj.getString("edgeLabels"))
                     || "BORN_IN".equals(obj.getString("edgeLabels")) || "DIRECTED".equals(obj.getString("edgeLabels"))
                     || "WROTE_MUSIC_FOR".equals(obj.getString("edgeLabels"))
@@ -243,11 +273,10 @@ public class TuGraphDbRpcClientTest {
         String password = args[2];
         String url = "list://" + hostPort;
         log.info("----------------new_Client--------------------");
-        TuGraphDbRpcClient client = new TuGraphDbRpcClient(url, user, password);
-        return client;
+        return new TuGraphDbRpcClient(url, user, password);
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         log.info("----------------startMain--------------------");
         if (args.length != 3) {
             log.info("java -jar target/tugraph-rpc-client-demo-3.1.0-jar-with-dependencies.jar [host:port] [user] "
@@ -256,8 +285,10 @@ public class TuGraphDbRpcClientTest {
         }
         TuGraphDbRpcClient client = startClient(args);
         try {
+            loadPlugin(client);
+            listProcedures(client);
+            deleteProcedure(client);
             loadProcedure(client);
-            listPlugins(client);
             callPlugin(client);
             callProcedure(client);
             importSchemaFromContent(client);

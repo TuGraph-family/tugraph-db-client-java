@@ -16,20 +16,17 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
+import java.nio.file.Files;
+import java.util.*;
 
-@SuppressWarnings("unchecked")
 @Slf4j
 public class TuGraphDbRpcClient {
 
     private static final int TIMEOUTINMS = 60 * 60 * 1000;
-    private RpcClient client;
-    private TuGraphDbService tuGraphService;
-    private String token;
-    private String url;
+    private final RpcClient client;
+    private final TuGraphDbService tuGraphService;
+    private final String token;
+    private final String url;
     private long serverVersion;
 
     public TuGraphDbRpcClient(String url, String user, String pass) {
@@ -70,7 +67,7 @@ public class TuGraphDbRpcClient {
         if (response.getErrorCode().getNumber() != Lgraph.LGraphResponse.ErrorCode.SUCCESS_VALUE) {
             throw new TuGraphDbRpcException(response.getErrorCode(), response.getError(), "CallCypher");
         }
-        serverVersion = response.getServerVersion() > serverVersion ? response.getServerVersion() : serverVersion;
+        serverVersion = Math.max(response.getServerVersion(), serverVersion);
         return response.getCypherResponse().getJsonResult();
     }
 
@@ -145,11 +142,11 @@ public class TuGraphDbRpcClient {
                             // \nnn octal numbers
                             int temp = 0;
                             for (int i = 0; i < 3; i++) {
-                                char sc = delimiter.charAt(idx);
                                 if (idx == size) {
                                     throw new InputException("Illegal escape sequence: " + delimiter.substring(begin,
                                                                                                                idx));
                                 }
+                                char sc = delimiter.charAt(idx);
                                 if (sc < '0' || sc > '7') {
                                     throw new InputException("Illegal escape sequence: " + delimiter.substring(begin,
                                                                                                                idx + 1));
@@ -181,11 +178,7 @@ public class TuGraphDbRpcClient {
         if (!file.exists() || !file.isFile()) {
             throw new InputException("Illegal file: " + path);
         }
-        try {
-            result = FileUtils.readFileToString(file, "utf-8");
-        } catch (IOException e) {
-            throw e;
-        }
+        result = FileUtils.readFileToString(file, "utf-8");
         return result;
     }
 
@@ -195,25 +188,13 @@ public class TuGraphDbRpcClient {
             throw new InputException("Illegal file: " + path);
         }
         long fileSize = file.length();
-        BufferedInputStream in = null;
-        try {
-            in = new BufferedInputStream(new FileInputStream(file), (int) fileSize);
+        try (BufferedInputStream in = new BufferedInputStream(Files.newInputStream(file.toPath()), (int) fileSize)) {
             byte[] buf = new byte[(int) fileSize];
             int readBytes = in.read(buf, 0, (int) fileSize);
             if (readBytes != fileSize) {
                 return null;
             }
             return buf;
-        } catch (IOException e) {
-            throw e;
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    throw e;
-                }
-            }
         }
     }
 
@@ -223,8 +204,8 @@ public class TuGraphDbRpcClient {
         }
         List<CsvDesc> list = new ArrayList<CsvDesc>();
         JSONArray array = conf.getJSONArray("files");
-        for (int idx = 0; idx < array.size(); ++idx) {
-            JSONObject obj = (JSONObject) array.get(idx);
+        for (Object value : array) {
+            JSONObject obj = (JSONObject) value;
             if (!obj.containsKey("path") || !obj.containsKey("format") || !obj.containsKey("label")
                     || !obj.containsKey("columns")) {
                 throw new InputException("Missing \"path\" or \"format\" or \"label\" or \"columns\" in json");
@@ -240,9 +221,8 @@ public class TuGraphDbRpcClient {
                 }
                 if (path.isDirectory()) {
                     File[] temp = path.listFiles();
-                    for (File f : temp) {
-                        files.add(f);
-                    }
+                    assert temp != null;
+                    Collections.addAll(files, temp);
                 }
             } else {
                 files.add(new File(""));
@@ -273,8 +253,8 @@ public class TuGraphDbRpcClient {
                 }
 
                 JSONArray columns = obj.getJSONArray("columns");
-                for (int i = 0; i < columns.size(); ++i) {
-                    String column = (String) columns.get(i);
+                for (Object o : columns) {
+                    String column = (String) o;
                     if ("".equals(column)) {
                         throw new InputException("Found empty filed in json " + file.getPath());
                     }
@@ -294,65 +274,63 @@ public class TuGraphDbRpcClient {
         return handleCypherRequest(cypher, graph, timeout);
     }
 
-    public boolean loadProcedure(String sourceFile, String procedureType, String procedureName, String codeType,
-                                 String procedureDescription, boolean readOnly, String graph, double timeout) throws IOException {
+    public boolean loadPlugin(String sourceFile, String pluginType, String pluginName, String codeType,
+                                 String pluginDescription, boolean readOnly, String graph, double timeout) throws IOException {
         byte[] content = binaryFileReader(sourceFile);
         if (content == null) {
             return false;
         }
         String content64 = Base64.getEncoder().encodeToString(content);
-        StringBuilder sb = new StringBuilder();
-        sb.append("CALL db.plugin.loadPlugin('");
-        sb.append(procedureType);
-        sb.append("','");
-        sb.append(procedureName);
-        sb.append("','");
-        sb.append(content64);
-        sb.append("','");
-        sb.append(codeType);
-        sb.append("','");
-        sb.append(procedureDescription);
-        sb.append("',");
-        sb.append(readOnly);
-        sb.append(")");
-        callCypher(sb.toString(), graph, timeout);
+        String sb = "CALL db.plugin.loadPlugin('" +
+                pluginType +
+                "','" +
+                pluginName +
+                "','" +
+                content64 +
+                "','" +
+                codeType +
+                "','" +
+                pluginDescription +
+                "'," +
+                readOnly +
+                ")";
+        callCypher(sb, graph, timeout);
         return true;
     }
 
-    public String callProcedure(String procedureType, String procedureName, String param, double procedureTimeOut,
+    public String callPlugin(String pluginType, String pluginName, String param, double pluginTimeOut,
                                 boolean inProcess, String graph, double timeout) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("CALL db.plugin.callPlugin('");
-        sb.append(procedureType);
-        sb.append("','");
-        sb.append(procedureName);
-        sb.append("','");
-        sb.append(param);
-        sb.append("',");
-        sb.append(procedureTimeOut);
-        sb.append(",");
-        sb.append(inProcess);
-        sb.append(")");
-        return callCypher(sb.toString(), graph, timeout);
+        String sb = "CALL db.plugin.callPlugin('" +
+                pluginType +
+                "','" +
+                pluginName +
+                "','" +
+                param +
+                "'," +
+                pluginTimeOut +
+                "," +
+                inProcess +
+                ")";
+        return callCypher(sb, graph, timeout);
     }
 
-    public String callPlugin(String pluginType, String pluginName, String param, double pluginTimeOut,
-                             boolean inProcess, String graph, double timeout) {
+    public String callProcedure(String procedureType, String procedureName, String param, double procedureTimeOut,
+                             boolean inProcess, String graph) {
         Lgraph.PluginRequest.PluginType type =
-                pluginType.equals("CPP") ? Lgraph.PluginRequest.PluginType.CPP : Lgraph.PluginRequest.PluginType.PYTHON;
-        ByteString resp = callPlugin(type, pluginName, ByteString.copyFromUtf8(param), graph, pluginTimeOut, inProcess);
+                "CPP".equals(procedureType) ? Lgraph.PluginRequest.PluginType.CPP : Lgraph.PluginRequest.PluginType.PYTHON;
+        ByteString resp = callProcedure(type, procedureName, ByteString.copyFromUtf8(param), graph, procedureTimeOut, inProcess);
         return resp.toStringUtf8();
     }
 
-    public String callPlugin(String pluginType, String pluginName, ByteString param,
+    public String callProcedure(String procedureType, String procedureName, ByteString param,
                              String graph, double timeout, boolean inProcess) {
         Lgraph.PluginRequest.PluginType type =
-                pluginType.equals("CPP") ? Lgraph.PluginRequest.PluginType.CPP : Lgraph.PluginRequest.PluginType.PYTHON;
-        ByteString resp = callPlugin(type, pluginName, param, graph, timeout, inProcess);
+                "CPP".equals(procedureType) ? Lgraph.PluginRequest.PluginType.CPP : Lgraph.PluginRequest.PluginType.PYTHON;
+        ByteString resp = callProcedure(type, procedureName, param, graph, timeout, inProcess);
         return resp.toStringUtf8();
     }
 
-    public ByteString callPlugin(Lgraph.PluginRequest.PluginType type, String name, ByteString param,
+    public ByteString callProcedure(Lgraph.PluginRequest.PluginType type, String name, ByteString param,
                                  String graph, double timeout, boolean inProcess) {
         Lgraph.CallPluginRequest vreq =
                 Lgraph.CallPluginRequest.newBuilder().setName(name).setParam(param).setTimeout(timeout)
@@ -363,14 +341,14 @@ public class TuGraphDbRpcClient {
                 Lgraph.LGraphRequest.newBuilder().setPluginRequest(req).setToken(this.token).build();
         Lgraph.LGraphResponse response = tuGraphService.HandleRequest(request);
         if (response.getErrorCode().getNumber() != Lgraph.LGraphResponse.ErrorCode.SUCCESS_VALUE) {
-            throw new TuGraphDbRpcException(response.getErrorCode(), response.getError(), "CallPlugin");
+            throw new TuGraphDbRpcException(response.getErrorCode(), response.getError(), "CallProcedure");
         }
         return response.getPluginResponse().getCallPluginResponse().getReply();
     }
 
-    public String listPlugins(String pluginType, String graph) {
+    public String listProcedures(String procedureType, String graph) {
         Lgraph.PluginRequest.PluginType type =
-                pluginType.equals("CPP") ? Lgraph.PluginRequest.PluginType.CPP : Lgraph.PluginRequest.PluginType.PYTHON;
+                "CPP".equals(procedureType) ? Lgraph.PluginRequest.PluginType.CPP : Lgraph.PluginRequest.PluginType.PYTHON;
         Lgraph.ListPluginRequest vreq = Lgraph.ListPluginRequest.newBuilder().build();
         Lgraph.PluginRequest req =
                 Lgraph.PluginRequest.newBuilder().setType(type).setListPluginRequest(vreq).setGraph(graph).build();
@@ -378,9 +356,52 @@ public class TuGraphDbRpcClient {
                 Lgraph.LGraphRequest.newBuilder().setIsWriteOp(false).setPluginRequest(req).setToken(this.token).build();
         Lgraph.LGraphResponse response = tuGraphService.HandleRequest(request);
         if (response.getErrorCode().getNumber() != Lgraph.LGraphResponse.ErrorCode.SUCCESS_VALUE) {
-            throw new TuGraphDbRpcException(response.getErrorCode(), response.getError(), "listPlugins");
+            throw new TuGraphDbRpcException(response.getErrorCode(), response.getError(), "listProcedures");
         }
         return response.getPluginResponse().getListPluginResponse().getReply();
+    }
+
+    public boolean loadProcedure(String sourceFile,
+                              String procedureType, String procedureName,
+                              String codeType,
+                              String procedureDescription, boolean readOnly,
+                              String graph) throws IOException {
+        Lgraph.PluginRequest.PluginType type =
+                "CPP".equals(procedureType) ? Lgraph.PluginRequest.PluginType.CPP : Lgraph.PluginRequest.PluginType.PYTHON;
+        Lgraph.LoadPluginRequest.CodeType cType =
+                "SO".equals(codeType) ? Lgraph.LoadPluginRequest.CodeType.SO :
+                "PY".equals(codeType) ? Lgraph.LoadPluginRequest.CodeType.PY :
+                "CPP".equals(codeType) ? Lgraph.LoadPluginRequest.CodeType.CPP :
+                Lgraph.LoadPluginRequest.CodeType.ZIP;
+        ByteString content = ByteString.copyFrom(Objects.requireNonNull(binaryFileReader(sourceFile)));
+        Lgraph.LoadPluginRequest lpRequest =
+                Lgraph.LoadPluginRequest.newBuilder().setName(procedureName).setDesc(procedureDescription)
+                .setReadOnly(readOnly).setCode(content).setCodeType(cType).build();
+        Lgraph.PluginRequest req =
+                Lgraph.PluginRequest.newBuilder().setType(type).setLoadPluginRequest(lpRequest).setGraph(graph).build();
+        Lgraph.LGraphRequest request =
+                Lgraph.LGraphRequest.newBuilder().setIsWriteOp(true).setPluginRequest(req).setToken(this.token).build();
+        Lgraph.LGraphResponse response = tuGraphService.HandleRequest(request);
+        if (response.getErrorCode().getNumber() != Lgraph.LGraphResponse.ErrorCode.SUCCESS_VALUE) {
+            throw new TuGraphDbRpcException(response.getErrorCode(), response.getError(), "loadProcedure");
+        }
+        return true;
+    }
+
+    public boolean deleteProcedure(String procedureType,
+                                String procedureName, String graph) {
+        Lgraph.PluginRequest.PluginType type =
+                "CPP".equals(procedureType) ? Lgraph.PluginRequest.PluginType.CPP : Lgraph.PluginRequest.PluginType.PYTHON;
+        Lgraph.DelPluginRequest dpRequest = Lgraph.DelPluginRequest.newBuilder().setName(procedureName).build();
+        Lgraph.PluginRequest req =
+                Lgraph.PluginRequest.newBuilder().setType(type).setDelPluginRequest(dpRequest).setGraph(graph).build();
+        Lgraph.LGraphRequest request =
+                Lgraph.LGraphRequest.newBuilder().setIsWriteOp(true).setPluginRequest(req).setToken(this.token).build();
+        Lgraph.LGraphResponse response = tuGraphService.HandleRequest(request);
+        if (response.getErrorCode().getNumber() != Lgraph.LGraphResponse.ErrorCode.SUCCESS_VALUE) {
+            throw new TuGraphDbRpcException(response.getErrorCode(), response.getError(), "deleteProcedure");
+        }
+        return true;
     }
 
     public boolean importSchemaFromContent(String schema, String graph, double timeout) throws UnsupportedEncodingException {
@@ -447,8 +468,7 @@ public class TuGraphDbRpcClient {
     }
 
     public boolean importDataFromFile(String confFile, String delimiter, boolean continueOnError, int threadNums,
-                                      int skipPackages, String graph, double timeout) throws IOException,
-            UnsupportedEncodingException {
+                                      int skipPackages, String graph, double timeout) throws IOException {
         String content = textFileReader(confFile);
         if ("".equals(content)) {
             throw new InputException("Illegal conf_file : " + confFile);
@@ -458,20 +478,17 @@ public class TuGraphDbRpcClient {
             throw new InputException("Illegal conf_file : " + confFile);
         }
         List<CsvDesc> files = parseConfigurationFile(jsonObject, true);
+        assert files != null;
         if (files.isEmpty()) {
             return true;
         }
         Collections.sort(files);
-        long bytesTotal = 0;
-        for (CsvDesc cd : files) {
-            bytesTotal += cd.getSize();
-        }
 
         for (CsvDesc cd : files) {
             byte[] desc = cd.dump(false);
             boolean isFirstPackage = true;
             FileCutter cutter = new FileCutter(cd.getPath());
-            byte[] buf = null;
+            byte[] buf;
             for (buf = cutter.cut(); buf != null; isFirstPackage = false) {
                 if (skipPackages > 0) {
                     --skipPackages;
@@ -527,7 +544,7 @@ public class TuGraphDbRpcClient {
         }
     }
 
-    protected void finalize() throws Throwable {
+    protected void finalize() {
         try {
             logout();
         } catch (Exception e) {
