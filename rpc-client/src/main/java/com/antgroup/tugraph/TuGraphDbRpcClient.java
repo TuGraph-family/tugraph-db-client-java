@@ -368,6 +368,21 @@ public class TuGraphDbRpcClient {
         return response.getPluginResponse().getCallPluginResponse().getReply();
     }
 
+    public String listPlugins(String pluginType, String graph) {
+        Lgraph.PluginRequest.PluginType type =
+                pluginType.equals("CPP") ? Lgraph.PluginRequest.PluginType.CPP : Lgraph.PluginRequest.PluginType.PYTHON;
+        Lgraph.ListPluginRequest vreq = Lgraph.ListPluginRequest.newBuilder().build();
+        Lgraph.PluginRequest req =
+                Lgraph.PluginRequest.newBuilder().setType(type).setListPluginRequest(vreq).setGraph(graph).build();
+        Lgraph.LGraphRequest request =
+                Lgraph.LGraphRequest.newBuilder().setIsWriteOp(false).setPluginRequest(req).setToken(this.token).build();
+        Lgraph.LGraphResponse response = tuGraphService.HandleRequest(request);
+        if (response.getErrorCode().getNumber() != Lgraph.LGraphResponse.ErrorCode.SUCCESS_VALUE) {
+            throw new TuGraphDbRpcException(response.getErrorCode(), response.getError(), "listPlugins");
+        }
+        return response.getPluginResponse().getListPluginResponse().getReply();
+    }
+
     public boolean importSchemaFromContent(String schema, String graph, double timeout) throws UnsupportedEncodingException {
         byte[] textByte = schema.getBytes(StandardCharsets.UTF_8);
         String schema64 = Base64.getEncoder().encodeToString(textByte);

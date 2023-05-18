@@ -35,6 +35,14 @@ public class TuGraphDbRpcClientTest {
         }
     }
 
+    public static void listPlugins(TuGraphDbRpcClient client) {
+        log.info("----------------testListPlugins--------------------");
+        String result = client.listPlugins("CPP", "default");
+        log.info("testListPlugin: " + result);
+        JSONArray jsonArray = JSONArray.parseArray(result);
+        assert (jsonArray.size() == 2);
+    }
+
     public static void callPlugin(TuGraphDbRpcClient client) {
         log.info("----------------testCallPlugin--------------------");
         String result1 = client.callPlugin("CPP", "sortstr", ByteString.copyFromUtf8("gecfb"), "default", 1000
@@ -249,6 +257,7 @@ public class TuGraphDbRpcClientTest {
         TuGraphDbRpcClient client = startClient(args);
         try {
             loadProcedure(client);
+            listPlugins(client);
             callPlugin(client);
             callProcedure(client);
             importSchemaFromContent(client);
