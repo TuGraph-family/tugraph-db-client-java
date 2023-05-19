@@ -19,3 +19,6 @@ devenv.local
 .vscode/
 build.log
 *.flattened-pom.xml
+dependencies.txt
+*/dependencies.txt
+*/*/dependencies.txt

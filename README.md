@@ -1,4 +1,4 @@
-# tugraph-client-java
+# TuGraph Java Client
 
 This repo is a Java client for developers to connect to TuGraph.
 
@@ -41,20 +41,18 @@ If you are using Maven to manage the dependency in your Java project, you can ad
 </dependency>
 ```
 
-### Usage
-
-#### Java client usage
+### Java client usage
 
 Please refer to the code example:
 
 [Java Client Test](rpc-client-test/src/main/java/com/antgroup/tugraph/TuGraphDbRpcClientTest.java)
 
-#### OGM usage
+### OGM usage
 
 Please refer to the code example:
 [OGM Test](ogm/tugraph-db-ogm-test/src/main/java/test/TestBase.java)
 
-#### OGM API Reference
+### OGM API Reference
 
 | Feature                                | API                                                                              |
 |----------------------------------------|----------------------------------------------------------------------------------|
@@ -70,6 +68,13 @@ Please refer to the code example:
 | Cypher query with specific result type | T queryForObject(Class\<T> objectType, String cypher, Map<String, ?> parameters) |
 | Cypher query                           | Result query(String cypher, Map<String, ?> parameters)                           |
 
+
+## FAQ
+
+### Upgrade the version
+
+Revision feature is used in this project to keep all the versions in submodules consistent.
+If you want to upgrade the version, e.g. for SNAPSHOT version, just set the `${revision}` property instead of using `mvn version:set`.
 
 ## Version Map
 

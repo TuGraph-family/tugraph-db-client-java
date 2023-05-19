@@ -247,21 +247,6 @@
                 <version>2.5.9</version>
             </dependency>
             <dependency>
-                <groupId>com.baidu</groupId>
-                <artifactId>brpc-java-naming-zookeeper</artifactId>
-                <version>2.5.9</version>
-            </dependency>
-            <dependency>
-                <groupId>com.baidu</groupId>
-                <artifactId>brpc-java-naming-consul</artifactId>
-                <version>2.5.9</version>
-            </dependency>
-            <dependency>
-                <groupId>com.baidu</groupId>
-                <artifactId>brpc-spring</artifactId>
-                <version>2.5.9</version>
-            </dependency>
-            <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
                 <version>${netty.version}</version>
@@ -391,18 +376,6 @@
         <dependency>
             <groupId>com.baidu</groupId>
             <artifactId>brpc-java</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.baidu</groupId>
-            <artifactId>brpc-spring</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.baidu</groupId>
-            <artifactId>brpc-java-naming-zookeeper</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.baidu</groupId>
-            <artifactId>brpc-java-naming-consul</artifactId>
         </dependency>
     </dependencies>
 </project>

@@ -20,17 +20,12 @@
 package com.antgroup.tugraph.ogm.drivers.rpc.response;
 
 import com.antgroup.tugraph.ogm.response.model.QueryStatisticsModel;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import com.antgroup.tugraph.ogm.config.ObjectMapperFactory;
 import com.antgroup.tugraph.ogm.result.adapter.ResultAdapter;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class StatisticsModelAdapter implements ResultAdapter<String, QueryStatisticsModel> {
-    protected static final ObjectMapper mapper = ObjectMapperFactory.objectMapper();
-
     public Integer[] mappingStats(Integer[] stats, String result) {
         for (int i = 0; i < stats.length; i++) {
             stats[i] = 0;
