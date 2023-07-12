@@ -81,7 +81,7 @@ If you want to upgrade the version, e.g. for SNAPSHOT version, just set the `${r
 | Client Version | TuGraph Version |
 |----------------|-----------------|
 | 1.1.1          | 3.3.3           |
-| 1.2.1          | 3.4.x           |
+| 1.2.1, 1.2.2   | 3.4.x, 3.5.0    |
 
 **Note**:
 - 3.3.0~3.3.2 versions of TuGraph Server are legacy versions before java-client refactoring, which are not supported by this repo.
