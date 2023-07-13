@@ -19,7 +19,7 @@
  */
 package com.antgroup.tugraph.ogm.drivers.rpc.driver;
 
-import org.neo4j.driver.exceptions.ServiceUnavailableException;
+import com.antgroup.tugraph.ogm.drivers.rpc.exception.ServiceUnavailableException;
 import com.antgroup.tugraph.ogm.driver.ExceptionTranslator;
 import com.antgroup.tugraph.ogm.exception.ConnectionException;
 

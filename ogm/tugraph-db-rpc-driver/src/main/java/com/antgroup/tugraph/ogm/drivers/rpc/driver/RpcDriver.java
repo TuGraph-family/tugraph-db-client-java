@@ -21,8 +21,6 @@ package com.antgroup.tugraph.ogm.drivers.rpc.driver;
 
 import java.net.URI;
 import java.util.Locale;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -30,8 +28,7 @@ import com.antgroup.tugraph.ogm.drivers.rpc.request.RpcRequest;
 import com.antgroup.tugraph.ogm.drivers.rpc.transaction.RpcTransaction;
 import com.antgroup.tugraph.TuGraphDbRpcClient;
 
-import org.neo4j.driver.*;
-import org.neo4j.driver.exceptions.ServiceUnavailableException;
+import com.antgroup.tugraph.ogm.drivers.rpc.exception.ServiceUnavailableException;
 import com.antgroup.tugraph.ogm.config.Configuration;
 import com.antgroup.tugraph.ogm.config.Credentials;
 import com.antgroup.tugraph.ogm.config.UsernamePasswordCredentials;
@@ -59,7 +56,6 @@ public class RpcDriver extends AbstractConfigurableDriver {
 
     private TuGraphDbRpcClient rpcClient;
     private Credentials credentials;
-    private Config driverConfig;
     /**
      * The database to use (Use Tugraph default).
      */
@@ -80,7 +76,6 @@ public class RpcDriver extends AbstractConfigurableDriver {
 
         super.configure(newConfiguration);
 
-        this.driverConfig = buildDriverConfig();
         this.credentials = this.configuration.getCredentials();
         this.database = this.configuration.getDatabase();
 
@@ -159,57 +154,6 @@ public class RpcDriver extends AbstractConfigurableDriver {
     @Override
     public Request request(Transaction transaction) {
         return new RpcRequest(rpcClient, this.parameterConversion, getCypherModification(), database);
-    }
-
-    public <T> T unwrap(Class<T> clazz) {
-
-        if (clazz == Driver.class) {
-            return (T) rpcClient;
-        } else {
-            return super.unwrap(clazz);
-        }
-    }
-
-    private Optional<Logging> getRpcLogging() {
-
-        Object possibleLogging = customPropertiesSupplier.get().get(CONFIG_PARAMETER_RPC_LOGGING);
-        if (possibleLogging != null && !(possibleLogging instanceof Logging)) {
-            LOGGER.warn("Invalid object of type {} for {}, not changing log.", possibleLogging.getClass(),
-                CONFIG_PARAMETER_RPC_LOGGING);
-            possibleLogging = null;
-        }
-
-        LOGGER.debug("Using {} for rpc logging.", possibleLogging == null ? "default" : possibleLogging.getClass());
-
-        return Optional.ofNullable((Logging) possibleLogging);
-    }
-
-    private Config buildDriverConfig() {
-
-        // Done outside the try/catch and explicity catch the illegalargument exception of singleURI
-        // so that exception semantics are not changed since we introduced that feature.
-
-        URI singleUri = getSingleURI(configuration.getURI());
-        if (!isCorrectScheme(singleUri.getScheme())) {
-            throw new IllegalArgumentException(
-                "Rpc uri is incorrect!");
-        }
-
-        try {
-            Config.ConfigBuilder configBuilder = Config.builder();
-            configBuilder.withMaxConnectionPoolSize(configuration.getConnectionPoolSize());
-
-            if (configuration.getConnectionLivenessCheckTimeout() != null) {
-                configBuilder.withConnectionLivenessCheckTimeout(configuration.getConnectionLivenessCheckTimeout(),
-                    TimeUnit.MILLISECONDS);
-            }
-
-            getRpcLogging().ifPresent(configBuilder::withLogging);
-
-            return configBuilder.build();
-        } catch (Exception e) {
-            throw new ConnectionException("Unable to build driver configuration", e);
-        }
     }
 
 }

@@ -21,7 +21,7 @@ package com.antgroup.tugraph.ogm.drivers.rpc.response;
 
 import java.util.ArrayList;
 
-import org.neo4j.driver.exceptions.ClientException;
+import com.antgroup.tugraph.ogm.drivers.rpc.exception.ClientException;
 
 import com.antgroup.tugraph.ogm.exception.CypherException;
 import com.antgroup.tugraph.ogm.response.Response;

@@ -34,9 +34,9 @@ import com.antgroup.tugraph.ogm.drivers.rpc.response.RestModelResponse;
 import com.antgroup.tugraph.ogm.drivers.rpc.response.RowModelResponse;
 import com.antgroup.tugraph.TuGraphDbRpcClient;
 
-import org.neo4j.driver.exceptions.ClientException;
-import org.neo4j.driver.exceptions.DatabaseException;
-import org.neo4j.driver.exceptions.TransientException;
+import com.antgroup.tugraph.ogm.drivers.rpc.exception.ClientException;
+import com.antgroup.tugraph.ogm.drivers.rpc.exception.DatabaseException;
+import com.antgroup.tugraph.ogm.drivers.rpc.exception.TransientException;
 import com.antgroup.tugraph.ogm.driver.ParameterConversion;
 import com.antgroup.tugraph.ogm.exception.CypherException;
 import com.antgroup.tugraph.ogm.model.GraphModel;
