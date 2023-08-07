@@ -338,10 +338,11 @@ public class RpcRequest implements Request {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Request: {} with params {}", cypher, parameterMap);
             }
-            String result = rpcClient.callCypher(mergeRequest(cypher, parameterMap), database, 10);
-            return result;
+            return rpcClient.callCypher(mergeRequest(cypher, parameterMap), database, 10);
         } catch (ClientException | DatabaseException | TransientException ce) {
             throw new CypherException(ce.code(), ce.getMessage(), ce);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }

@@ -54,7 +54,7 @@
         <revision>1.2.3-SNAPSHOT</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <netty.version>4.1.44.Final</netty.version>
-        <lombok.version>1.18.8</lombok.version>
+        <lombok.version>1.18.28</lombok.version>
         <maven.staging.plugin>1.6.7</maven.staging.plugin>
         <maven.gpg.plugin>1.6</maven.gpg.plugin>
         <maven.compiler.plugin>3.6.1</maven.compiler.plugin>

@@ -13,10 +13,6 @@
     <name>${project.artifactId}</name>
     <description>TuGraph-DB Java Client Test Library for Integration Test</description>
 
-    <properties>
-        <rpc.client.version>${revision}</rpc.client.version>
-    </properties>
-
     <build>
         <plugins>
             <plugin>
@@ -64,7 +60,7 @@
         <dependency>
             <groupId>com.antgroup.tugraph</groupId>
             <artifactId>tugraph-db-java-rpc-client</artifactId>
-            <version>${rpc.client.version}</version>
+            <version>${revision}</version>
         </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
@@ -77,6 +73,11 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>

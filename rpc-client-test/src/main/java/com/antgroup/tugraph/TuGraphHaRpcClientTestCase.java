@@ -1,0 +1,496 @@
+package com.antgroup.tugraph;
+
+import java.io.*;
+
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.*;
+
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+
+@Slf4j
+public class TuGraphHaRpcClientTestCase {
+
+    public static void importSchemaFromContent(TuGraphDbRpcClient client) throws Exception {
+        log.info("----------------testImportSchemaFromContent--------------------");
+        client.callCypher("CALL db.dropDB()", "default", 10);
+        String schema = "{\"schema\" :" +
+                "    [" +
+                "         {" +
+                "             \"label\" : \"Person\"," +
+                "             \"type\" : \"VERTEX\"," +
+                "             \"primary\" : \"name\"," +
+                "             \"properties\" : [" +
+                "                 {\"name\" : \"name\", \"type\":\"STRING\"}," +
+                "                 {\"name\" : \"birthyear\", \"type\":\"INT16\", \"optional\":true}," +
+                "                 {\"name\" : \"phone\", \"type\":\"INT16\",\"unique\":true, \"index\":true}" +
+                "             ]" +
+                "         }," +
+                "        {" +
+                "            \"label\" : \"Film\"," +
+                "            \"type\" : \"VERTEX\"," +
+                "            \"primary\" : \"title\"," +
+                "            \"properties\" : [" +
+                "                {\"name\" : \"title\", \"type\":\"STRING\"} " +
+                "            ]" +
+                "        }," +
+                "       {" +
+                "	        \"label\": \"PLAY_IN\"," +
+                "	        \"type\": \"EDGE\"," +
+                "	        \"properties\": [{" +
+                "		        \"name\": \"role\"," +
+                "		        \"type\": \"STRING\", " +
+                "		        \"optional\": true " +
+                "	        }]," +
+                "	        \"constraints\": [" +
+                "		        [\"Person\", \"Film\"]" +
+                "	        ]" +
+                "       }" +
+                "    ]" +
+                "}";
+
+        try {
+            boolean ret = client.importSchemaFromContent(schema, "default", 1000);
+            log.info("importSchemaFromContent : " + ret);
+            assert (ret);
+        } catch (Exception e) {
+            log.info("catch exception : " + e.getMessage());
+        }
+
+        Thread.sleep(1000 * 5);
+        String res = client.callCypher("CALL db.vertexLabels()", "default", 10);
+        log.info("db.vertexLabels() : " + res);
+        JSONArray jsonArray = JSONArray.parseArray(res);
+        assert (jsonArray.size() == 2);
+
+        for (Object o : jsonArray) {
+            JSONObject obj = (JSONObject) o;
+            assert ("Person".equals(obj.getString("label")) || "Film".equals(obj.getString("label")));
+        }
+        res = client.callCypher("CALL db.edgeLabels()", "default", 10);
+        log.info("db.edgeLabels() : " + res);
+        JSONObject jsonObject = (JSONObject)JSONObject.parseArray(res).get(0);
+        assert (jsonObject.containsKey("edgeLabels"));
+        assert ("PLAY_IN".equals(jsonObject.getString("edgeLabels")));
+    }
+
+    public static void importDataFromContent(TuGraphDbRpcClient client) throws Exception {
+
+        log.info("----------------testImportDataFromContent--------------------");
+        String personDesc = "{\"files\": [" +
+                "    {" +
+                "        \"columns\": [" +
+                "            \"name\"," +
+                "            \"birthyear\"," +
+                "            \"phone\"]," +
+                "        \"format\": \"CSV\"," +
+                "        \"header\": 0," +
+                "        \"label\": \"Person\" " +
+                "        }" +
+                "    ]" +
+                "}";
+
+        String person = "Rachel Kempson,1910,10086\n" +
+                "Michael Redgrave,1908,10087\n" +
+                "Vanessa Redgrave,1937,10088\n" +
+                "Corin Redgrave,1939,10089\n" +
+                "Liam Neeson,1952,10090\n" +
+                "Natasha Richardson,1963,10091\n" +
+                "Richard Harris,1930,10092\n" +
+                "Dennis Quaid,1954,10093\n" +
+                "Lindsay Lohan,1986,10094\n" +
+                "Jemma Redgrave,1965,10095\n" +
+                "Roy Redgrave,1873,10096\n" +
+                "John Williams,1932,10097\n" +
+                "Christopher Nolan,1970,10098\n";
+
+
+        try {
+            boolean ret = client.importDataFromContent(personDesc, person, ",", true, 16, "default", 1000);
+            log.info("importDataFromContent : " + ret);
+            assert (ret);
+        } catch (Exception e) {
+            log.info("catch exception : " + e.getMessage());
+        }
+        Thread.sleep(1000 * 5);
+        String res = client.callCypher("MATCH (n) RETURN COUNT(n)", "default", 10);
+        log.info("MATCH (n) RETURN COUNT(n) : " + res);
+        JSONObject jsonObject = (JSONObject)JSONObject.parseArray(res).get(0);
+        assert (jsonObject.containsKey("COUNT(n)"));
+        assert (jsonObject.getIntValue("COUNT(n)") == 13);
+    }
+
+    public static void importSchemaFromFile(TuGraphDbRpcClient client) throws Exception {
+        log.info("----------------testImportSchemaFromFile--------------------");
+        client.callCypher("CALL db.dropDB()", "default", 10);
+        try {
+            boolean ret = client.importSchemaFromFile("./data/yago/yago.conf", "default", 1000);
+            log.info("importSchemaFromFile : " + ret);
+            assert (ret);
+        } catch (Exception e) {
+            log.info("catch exception : " + e.getMessage());
+        }
+
+        Thread.sleep(1000 * 5);
+        String res = client.callCypher("CALL db.vertexLabels()", "default", 10);
+        log.info("db.vertexLabels() : " + res);
+        JSONArray array = JSONArray.parseArray(res);
+        assert (array.size() == 3);
+        for (Object value : array) {
+            JSONObject obj = (JSONObject) value;
+            assert ("Person".equals(obj.getString("label")) || "Film".equals(obj.getString("label"))
+                    || "City".equals(obj.getString("label")));
+        }
+
+        res = client.callCypher("CALL db.edgeLabels()", "default", 10);
+        log.info("db.edgeLabels() : " + res);
+        array = JSONArray.parseArray(res);
+        assert (array.size() == 6);
+        for (Object o : array) {
+            JSONObject obj = (JSONObject) o;
+            assert ("HAS_CHILD".equals(obj.getString("edgeLabels")) || "MARRIED".equals(obj.getString("edgeLabels"))
+                    || "BORN_IN".equals(obj.getString("edgeLabels")) || "DIRECTED".equals(obj.getString("edgeLabels"))
+                    || "WROTE_MUSIC_FOR".equals(obj.getString("edgeLabels"))
+                    || "ACTED_IN".equals(obj.getString("edgeLabels")));
+        }
+
+    }
+
+    public static void importDataFromFile(TuGraphDbRpcClient client) throws Exception {
+        log.info("----------------testImportDataFromFile--------------------");
+        try {
+            boolean ret = client.importDataFromFile("./data/yago/yago.conf", ",", true, 16, 0, "default", 1000);
+            log.info("importDataFromFile : " + ret);
+            assert (ret);
+        } catch (Exception e) {
+            log.info("catch exception : " + e.getMessage());
+        }
+        Thread.sleep(1000 * 5);
+        String res = client.callCypher("MATCH (n:Person) RETURN COUNT(n)", "default", 1000);
+        log.info("MATCH (n) RETURN COUNT(n) : " + res);
+        JSONObject jsonObject = (JSONObject)JSONObject.parseArray(res).get(0);
+        assert (jsonObject.containsKey("COUNT(n)"));
+        assert (jsonObject.getIntValue("COUNT(n)") == 13);
+
+        res = client.callCypher("match(n)-[r]->(m) return count(r)", "default", 1000);
+
+        jsonObject = (JSONObject)JSONObject.parseArray(res).get(0);
+        log.info("match(n)-[r]->(m) return count(r) : " + res);
+        assert (jsonObject.containsKey("count(r)"));
+        assert (jsonObject.getIntValue("count(r)") == 28);
+    }
+
+    public static void buildProcedure(String pluginName, String pluginPath) {
+        log.info("----------------testBuildProcedure--------------------");
+        String includeDir = "../../include";
+        String libLgraph = "./liblgraph.so";
+        String cmd = String.format("g++ -fno-gnu-unique -fPIC -g --std=c++17 -I %s -rdynamic -O3 -fopenmp -DNDEBUG -o %s %s %s -shared",
+                includeDir, pluginName, pluginPath, libLgraph);
+        executive(cmd);
+    }
+
+    public static void loadProcedure(TuGraphDbRpcClient client) {
+        log.info("----------------testLoadProcedure--------------------");
+        try {
+            client.callCypher("CALL db.dropDB()", "default", 10);
+            buildProcedure("./sortstr.so", "../../test/test_procedures/sortstr.cpp");
+            boolean result = client.loadProcedure("./sortstr.so", "CPP", "sortstr", "SO", "test sortstr", true, "v1",  "default");
+            log.info("loadProcedure : " + result);
+            assert (result);
+            // should throw TuGraphRpcException
+            buildProcedure("./scan_graph.so", "../../test/test_procedures/scan_graph.cpp");
+            result = client.loadProcedure("./scan_graph.so", "CPP", "scan_graph", "SO", "test scan_graph", true,  "v1", "default");
+            log.info("loadProcedure : " + result);
+        } catch (Exception e) {
+            log.info("catch Exception : " + e.getMessage());
+        }
+    }
+
+    public static void callProcedure(TuGraphDbRpcClient client) throws Exception {
+        log.info("----------------testCallProcedure--------------------");
+        String result = client.callProcedure("CPP", "sortstr", "gecfb", 1000, false, "default");
+        log.info("testCallProcedure : " + result);
+        assert ("bcefg".equals(result));
+        result = client.callProcedure("CPP", "sortstr", "gecfb", 1000, false, "default", host+":29093");
+        log.info("testCallProcedure : " + result);
+        assert ("bcefg".equals(result));
+    }
+
+    public static void listProcedures(TuGraphDbRpcClient client) throws Exception {
+        log.info("----------------testListProcedures--------------------");
+        String result = client.listProcedures("CPP", "v1", "default");
+        log.info("testListProcedures : " + result);
+        JSONArray array = JSONObject.parseArray(result);
+        assert array.size()==2;
+        result = client.listProcedures("CPP", "default", host+":29093");
+        array = JSONObject.parseArray(result);
+        assert array.size()==2;
+    }
+
+    public static void deleteProcedure(TuGraphDbRpcClient client) throws Exception {
+        log.info("----------------testDeleteProcedure--------------------");
+        boolean res = client.deleteProcedure("CPP","sortstr", "default");
+        assert res;
+        Thread.sleep(3000);
+        String result = client.listProcedures("CPP", "v1",  "default");
+        log.info("testListProcedures : " + result);
+        JSONArray array = JSONObject.parseArray(result);
+        assert array.size()==1;
+    }
+
+    public static void executive(String stmt) {
+        Runtime runtime = Runtime.getRuntime();
+
+        try {
+            String[] command = {"/bin/sh", "-c", stmt};
+
+            Process process = runtime.exec(command);
+            String inStr = consumeInputStream(process.getInputStream());
+            String errStr = consumeInputStream(process.getErrorStream());
+
+            int proc = process.waitFor();
+            if (proc == 0) {
+                log.info("succ");
+                log.info(inStr);
+            } else {
+                log.info("fail");
+                log.info(errStr);
+            }
+        } catch (Exception e) {
+            log.info(e.getMessage());
+        }
+    }
+
+    public static String executiveWithValue(String stmt) {
+        Runtime runtime = Runtime.getRuntime();
+        String inStr = "";
+
+        try {
+            String[] command = {"/bin/sh", "-c", stmt};
+
+            Process process = runtime.exec(command);
+
+            inStr = consumeInputStream(process.getInputStream());
+            // String errStr = consumeInputStream(process.getErrorStream());
+
+            int proc = process.waitFor();
+            if (proc == 0) {
+                log.info("succ");
+            } else {
+                log.info("fail");
+            }
+        } catch (Exception e) {
+            log.info(e.getMessage());
+        }
+        return inStr;
+    }
+
+    public static String consumeInputStream(InputStream is) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(is, "GBK"));
+        String s;
+        StringBuilder sb = new StringBuilder();
+        while ((s = br.readLine()) != null) {
+            log.info(s);
+            sb.append(s);
+        }
+        return sb.toString();
+    }
+
+    public static TuGraphDbRpcClient startHaClient(String port) throws Exception {
+        log.info("----------------startClient--------------------");
+        String hostPort = host + ":" + port;
+        String user = "admin";
+        String password = "73@TuGraph";
+        return new TuGraphDbRpcClient(hostPort, user, password);
+    }
+
+    public static TuGraphDbRpcClient startHaClient(List<String> ports) throws Exception {
+        log.info("----------------startClient--------------------");
+        List<String> urls = new ArrayList<>();
+        for (String port: ports) {
+            urls.add(host + ":" + port);
+        }
+        String user = "admin";
+        String password = "73@TuGraph";
+        return new TuGraphDbRpcClient(urls, user, password);
+    }
+
+    public static String getRestPortByKey(String key, TuGraphDbRpcClient client) throws Exception {
+
+        String s = "";
+
+        String res = client.callCypher("CALL dbms.ha.clusterInfo()", "default", 10);
+        log.info(res);
+        JSONObject jsonObject = (JSONObject)JSONObject.parseArray(res).get(0);
+        assert (jsonObject.containsKey("cluster_info"));
+        JSONArray array = JSONArray.parseArray(jsonObject.getString("cluster_info"));
+        for (Object o : array) {
+            JSONObject obj = (JSONObject) o;
+            if (obj.getString("state").equals(key)) {
+                s = obj.getString("rest_address");
+            }
+        }
+        return s.split(":")[1];
+    }
+
+    public static void getAllRestPorts(TuGraphDbRpcClient client) throws Exception {
+        List<String> res = new ArrayList<>();
+        String ss = client.callCypher("CALL dbms.ha.clusterInfo()", "default", 10);
+        log.info(ss);
+        JSONObject jsonObject = (JSONObject)JSONObject.parseArray(ss).get(0);
+        JSONArray array = JSONArray.parseArray(jsonObject.getString("cluster_info"));
+        for (Object o : array) {
+            JSONObject obj = (JSONObject) o;
+            res.add(obj.getString("rest_address").split(":")[1]);
+        }
+        log.info(res.toString());
+    }
+
+    private static String host;
+
+    public static void executeCypherAndAssert(TuGraphDbRpcClient client, String cypher, int count) throws Exception {
+        String res = client.callCypher(cypher, "default", 10);
+        JSONObject jsonObject = (JSONObject)JSONObject.parseArray(res).get(0);
+        assert (jsonObject.containsKey("n"));
+        assert (JSONObject.parseObject(jsonObject.getString("n")).containsKey("identity"));
+        assert (JSONObject.parseObject(jsonObject.getString("n")).getIntValue("identity") == count);
+    }
+
+    public static void haClientTest() throws Exception {
+        host = executiveWithValue("hostname -I");
+        host = host.substring(0, host.length() - 1);
+
+        // start HA group
+        executive("mkdir ha1 && cp -r ../../src/server/lgraph_ha.json ./lgraph_server ./resource ha1 && cd ha1 && ./lgraph_server --host " + host + " --port 27072 --enable_rpc true --enable_ha true --ha_node_offline_ms 5000 --ha_node_remove_ms 10000 --rpc_port 29092 --directory ./db --log_dir ./log  --ha_conf " + host + ":29092," + host + ":29093," + host + ":29094 -c lgraph_ha.json -d start");
+        Thread.sleep(3000);
+
+        executive("mkdir ha2 && cp -r ../../src/server/lgraph_ha.json ./lgraph_server ./resource ha2 && cd ha2 && ./lgraph_server --host " + host + " --port 27073 --enable_rpc true --enable_ha true --ha_node_offline_ms 5000 --ha_node_remove_ms 10000 --rpc_port 29093 --directory ./db --log_dir ./log  --ha_conf " + host + ":29092," + host + ":29093," + host + ":29094 -c lgraph_ha.json -d start");
+        Thread.sleep(3000);
+
+        executive("mkdir ha3 && cp -r ../../src/server/lgraph_ha.json ./lgraph_server ./resource ha3 && cd ha3 && ./lgraph_server --host " + host + " --port 27074 --enable_rpc true --enable_ha true --ha_node_offline_ms 5000 --ha_node_remove_ms 10000 --rpc_port 29094 --directory ./db --log_dir ./log  --ha_conf " + host + ":29092," + host + ":29093," + host + ":29094 -c lgraph_ha.json -d start");
+        Thread.sleep(3000);
+
+        TuGraphDbRpcClient client = startHaClient("29092");
+        try {
+
+            log.info("---------client start success!--------");
+            Thread.sleep(5000);
+            log.info(getRestPortByKey("MASTER", client));
+
+
+            String res1 = client.callCypher("MATCH (n) RETURN count(n)", "default", 10);
+            JSONArray jsonArray = JSONObject.parseArray(res1);
+            assert (jsonArray.size()==0);
+
+
+            importSchemaFromContent(client);
+            importDataFromContent(client);
+
+            loadProcedure(client);
+            callProcedure(client);
+            listProcedures(client);
+            deleteProcedure(client);
+            importSchemaFromFile(client);
+            importDataFromFile(client);
+
+            // query after importing data
+            String res2 = client.callCypher("MATCH (n:Person) RETURN count(n)", "default", 10);
+            JSONObject jsonObject1 = (JSONObject)JSONObject.parseArray(res2).get(0);
+            assert (jsonObject1.containsKey("count(n)"));
+            assert (jsonObject1.getIntValue("count(n)") == 13);
+
+            res2 = client.callCypher("MATCH (n:Person) RETURN count(n)", "default", 10, host+":29094");
+            jsonObject1 = (JSONObject)JSONObject.parseArray(res2).get(0);
+            assert (jsonObject1.containsKey("count(n)"));
+            assert (jsonObject1.getIntValue("count(n)") == 13);
+
+            try {
+                client.callCypher("MATCH (n:Person) WHERE n.name=\"Test1\" RETURN n", "default", 10);
+            } catch (TuGraphDbRpcException e) {
+                log.info("Catch exception " + e.getMessage() + "in callCypher");
+            }
+
+            log.info(client.callCypher("CREATE (p:Person{name:\"Test1\",birthyear:1988,phone:10000})", "default", 10));
+
+            Thread.sleep(1000 * 5);
+            executeCypherAndAssert(client, "MATCH (n:Person) WHERE n.name=\"Test1\" RETURN n", 21);
+
+
+            // test urlTable
+            List<String> urls = new ArrayList<>();
+            urls.add("29092");
+            urls.add("29093");
+            urls.add("29094");
+            TuGraphDbRpcClient urlClient = startHaClient(urls);
+            executeCypherAndAssert(urlClient, "MATCH (n:Person) WHERE n.name=\"Test1\" RETURN n", 21);
+            urlClient.logout();
+            // stop follower
+            log.info("-------------------------stopping follower-------------------------");
+            client.logout();
+            Thread.sleep(1000 * 7);
+            executive("kill -2 $(ps -ef | grep 27073 | grep -v grep | awk '{print $2}')");
+            Thread.sleep(1000 * 13);
+            client = startHaClient("29092");
+            Thread.sleep(1000 * 7);
+
+            getAllRestPorts(client);
+            log.info("-------------------------stop follower successfully-------------------------");
+            client.callCypher("CREATE (p:Person{name:\"Test2\",birthyear:1988,phone:20000})", "default", 10);
+
+            // restart follower
+            log.info("-------------------------starting follower-------------------------");
+            client.logout();
+            Thread.sleep(1000 * 7);
+            executive("cd ha2 && ./lgraph_server --host " + host + " --port 27073 --enable_rpc true --enable_ha true --ha_node_offline_ms 5000 --ha_node_remove_ms 10000 --rpc_port 29093 --directory ./db --log_dir ./log  --ha_conf " + host + ":29092," + host + ":29093," + host + ":29094 -c lgraph_ha.json -d start");
+            Thread.sleep(1000 * 13);
+            client = startHaClient("29092");
+            Thread.sleep(1000 * 7);
+
+            getAllRestPorts(client);
+            log.info("-------------------------start follower successfully-------------------------");
+            executeCypherAndAssert(client, "MATCH (n:Person) WHERE n.name=\"Test2\" RETURN n", 22);
+
+            // stop leader
+            log.info("-------------------------stopping leader-------------------------");
+            client.logout();
+            Thread.sleep(1000 * 7);
+            executive("kill -2 $(ps -ef | grep 27072 | grep -v grep | awk '{print $2}')");
+            Thread.sleep(1000 * 13);
+            client = startHaClient("29093");
+            Thread.sleep(1000 * 7);
+
+            getAllRestPorts(client);
+            log.info("-------------------------stop leader successfully-------------------------");
+            client.callCypher("CREATE (p:Person{name:\"Test3\",birthyear:1988,phone:30000})", "default", 10);
+
+            // restart leader
+            log.info("-------------------------starting leader-------------------------");
+            client.logout();
+            Thread.sleep(1000 * 7);
+            executive("cd ha1 && ./lgraph_server --host " + host + " --port 27072 --enable_rpc true --enable_ha true --ha_node_offline_ms 5000 --ha_node_remove_ms 10000 --rpc_port 29092 --directory ./db --log_dir ./log  --ha_conf " + host + ":29092," + host + ":29093," + host + ":29094 -c lgraph_ha.json -d start");
+            Thread.sleep(1000 * 13);
+            client = startHaClient("29093");
+            Thread.sleep(1000 * 7);
+
+            getAllRestPorts(client);
+            log.info("-------------------------start leader successfully-------------------------");
+            executeCypherAndAssert(client, "MATCH (n:Person) WHERE n.name=\"Test3\" RETURN n", 23);
+        } catch (TuGraphDbRpcException e) {
+            log.info("Exception at " + e.GetErrorMethod() + " with errorCodeName: " + e.GetErrorCodeName() + " and error: " + e.GetError());
+            log.info(e.getMessage());
+        } catch (Exception e2) {
+            log.info(e2.getMessage());
+        } finally {
+            // stop leader and follower
+            client.logout();
+            for (int i = 27072; i <= 27074; i++) {
+                executive("kill -2 $(ps -ef | grep " + i + " | grep -v grep | awk '{print $2}')");
+            }
+            for (int i = 1; i <= 3; i++) {
+                executive("rm -rf ha" + i);
+            }
+            executive("rm -rf scan_graph.so sortstr.so");
+        }
+    }
+}

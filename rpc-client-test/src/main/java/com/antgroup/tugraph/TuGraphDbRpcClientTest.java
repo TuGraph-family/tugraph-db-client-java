@@ -2,7 +2,6 @@ package com.antgroup.tugraph;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.google.protobuf.ByteString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,25 +12,6 @@ public class TuGraphDbRpcClientTest {
     static Logger log = LoggerFactory.getLogger(TuGraphDbRpcClientTest.class);
 
 
-    public static void loadPlugin(TuGraphDbRpcClient client) {
-        log.info("----------------testLoadPlugin--------------------");
-        try {
-            client.callCypher("CALL db.dropDB()", "default", 10);
-            boolean result = client.loadPlugin("./sortstr.so", "CPP", "sortstr", "SO", "test sortstr", true,
-                    "v1", "default" , 1000);
-            log.info("loadPlugin : " + result);
-            assert (result);
-            // should throw TuGraphDbRpcException
-            result = client.loadPlugin("./scan_graph.so", "CPP", "scan_graph", "SO", "test scan_graph", true,
-                    "v1","default", 1000);
-            log.info("loadPlugin : " + result);
-        } catch (IOException e) {
-            log.info("catch IOException : " + e.getMessage());
-        } catch (TuGraphDbRpcException e) {
-            log.info("catch TuGraphDbRpcException : " + e.getMessage());
-        }
-    }
-
     public static void deleteProcedure(TuGraphDbRpcClient client) {
         log.info("----------------testDeleteProcedure--------------------");
         try {
@@ -41,8 +21,8 @@ public class TuGraphDbRpcClientTest {
             // should throw TuGraphDbRpcException
             result = client.deleteProcedure("CPP", "scan_graph", "default");
             log.info("loadProcedure : " + result);
-        } catch (TuGraphDbRpcException e) {
-            log.info("catch TuGraphDbRpcException : " + e.getMessage());
+        } catch (Exception e) {
+            log.info("catch Exception : " + e.getMessage());
         }
     }
 
@@ -59,12 +39,12 @@ public class TuGraphDbRpcClientTest {
             log.info("loadProcedure : " + result);
         } catch (IOException e) {
             log.info("catch IOException : " + e.getMessage());
-        } catch (TuGraphDbRpcException e) {
-            log.info("catch TuGraphDbRpcException : " + e.getMessage());
+        } catch (Exception e) {
+            log.info("catch Exception : " + e.getMessage());
         }
     }
 
-    public static void listProcedures(TuGraphDbRpcClient client) {
+    public static void listProcedures(TuGraphDbRpcClient client) throws Exception {
         try {
             log.info("----------------testListProcedures--------------------");
             String result = client.listProcedures("CPP", "any", "default");
@@ -76,30 +56,15 @@ public class TuGraphDbRpcClientTest {
         }
     }
 
-    public static void callProcedure(TuGraphDbRpcClient client) {
+    public static void callProcedure(TuGraphDbRpcClient client) throws Exception {
         log.info("----------------testCallProcedure--------------------");
-        String result1 = client.callProcedure("CPP", "sortstr", ByteString.copyFromUtf8("gecfb"), "default", 1000
-                , false);
-        log.info("testCallProcedure 1: " + result1);
-        assert ("bcefg".equals(result1));
 
-        String result2 = client.callProcedure("CPP", "sortstr", "gecfb", 1000, false, "default");
-        log.info("testCallProcedure 2: " + result2);
-        assert ("bcefg".equals(result2));
+        String result = client.callProcedure("CPP", "sortstr", "gecfb", 1000, false, "default");
+        log.info("testCallProcedure: " + result);
+        assert ("bcefg".equals(result));
     }
 
-    public static void callPlugin(TuGraphDbRpcClient client) {
-        log.info("----------------testCallPlugin--------------------");
-        String result = client.callPlugin("CPP", "sortstr", "gecfb", 1000, false, "default", 1000);
-        log.info("testCallPlugin : " + result);
-        JSONArray jsonArray = JSONArray.parseArray(result);
-        assert (jsonArray.size() == 1);
-        JSONObject jsonObject = jsonArray.getJSONObject(0);
-        assert (jsonObject.containsKey("result"));
-        assert ("bcefg".equals(jsonObject.getString("result")));
-    }
-
-    public static void importSchemaFromContent(TuGraphDbRpcClient client) {
+    public static void importSchemaFromContent(TuGraphDbRpcClient client) throws Exception {
         log.info("----------------testImportSchemaFromContent--------------------");
         client.callCypher("CALL db.dropDB()", "default", 10);
         String schema = "{\"schema\" :" +
@@ -162,7 +127,7 @@ public class TuGraphDbRpcClientTest {
         assert ("PLAY_IN".equals(jsonObject.getString("edgeLabels")));
     }
 
-    public static void importDataFromContent(TuGraphDbRpcClient client) {
+    public static void importDataFromContent(TuGraphDbRpcClient client) throws Exception {
         log.info("----------------testImportDataFromContent--------------------");
         String personDesc = "{\"files\": [" +
                 "    {" +
@@ -196,7 +161,7 @@ public class TuGraphDbRpcClientTest {
             boolean ret = client.importDataFromContent(personDesc, person, ",", true, 16, "default", 1000);
             log.info("importDataFromContent : " + ret);
             assert (ret);
-        } catch (UnsupportedEncodingException e) {
+        } catch (Exception e) {
             log.info("catch exception : " + e.getMessage());
         }
         String res = client.callCypher("MATCH (n) RETURN COUNT(n)", "default", 10);
@@ -208,7 +173,7 @@ public class TuGraphDbRpcClientTest {
         assert (jsonObject.getIntValue("COUNT(n)") == 13);
     }
 
-    public static void importSchemaFromFile(TuGraphDbRpcClient client) {
+    public static void importSchemaFromFile(TuGraphDbRpcClient client) throws Exception {
         log.info("----------------testImportSchemaFromFile--------------------");
         client.callCypher("CALL db.dropDB()", "default", 10);
         try {
@@ -243,13 +208,13 @@ public class TuGraphDbRpcClientTest {
 
     }
 
-    public static void importDataFromFile(TuGraphDbRpcClient client) {
+    public static void importDataFromFile(TuGraphDbRpcClient client) throws Exception {
         log.info("----------------testImportDataFromFile--------------------");
         try {
             boolean ret = client.importDataFromFile("./data/yago/yago.conf", ",", true, 16, 0, "default", 1000);
             log.info("importDataFromFile : " + ret);
             assert (ret);
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.info("catch exception : " + e.getMessage());
         }
         String res = client.callCypher("MATCH (n:Person) RETURN COUNT(n)", "default", 1000);
@@ -269,45 +234,48 @@ public class TuGraphDbRpcClientTest {
         assert (jsonObject.getIntValue("count(r)") == 28);
     }
 
-    public static TuGraphDbRpcClient startClient(String[] args) {
+    public static TuGraphDbRpcClient startClient(String[] args) throws Exception {
         log.info("----------------startClient--------------------");
         String hostPort = args[0];
         String user = args[1];
         String password = args[2];
-        String url = "list://" + hostPort;
         log.info("----------------new_Client--------------------");
-        return new TuGraphDbRpcClient(url, user, password);
+        return new TuGraphDbRpcClient(hostPort, user, password);
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         log.info("----------------startMain--------------------");
-        if (args.length != 3) {
-            log.info("java -jar target/tugraph-rpc-client-demo-3.1.0-jar-with-dependencies.jar [host:port] [user] "
+        if (args.length != 3 && args.length != 0) {
+            log.info("java -jar -ea tugraph-db-java-rpc-client-test-1.2.3.jar [host:port] [user] "
                     + "[password]");
+            log.info("java -jar -ea tugraph-db-java-rpc-client-test-1.2.3.jar");
             return;
         }
-        TuGraphDbRpcClient client = startClient(args);
-        try {
-            loadPlugin(client);
-            listProcedures(client);
-            deleteProcedure(client);
-            loadProcedure(client);
-            callPlugin(client);
-            callProcedure(client);
-            importSchemaFromContent(client);
-            importDataFromContent(client);
-            importSchemaFromFile(client);
-            importDataFromFile(client);
-        } catch (TuGraphDbRpcException e) {
-            log.info("Exception at " + e.GetErrorMethod() + " with errorCodeName: " + e.GetErrorCodeName() + " and "
-                    + "error: " + e.GetError());
-        }
-        log.info("----------------testRpcClientLogout--------------------");
-        client.logout();
-        try {
-            loadProcedure(client);
-        } catch (TuGraphDbRpcException e) {
-            log.info("rpc client has logout !!");
+        if (args.length == 0) {
+            TuGraphHaRpcClientTestCase.haClientTest();
+        } else {
+            TuGraphDbRpcClient client = startClient(args);
+            try {
+                loadProcedure(client);
+                listProcedures(client);
+                deleteProcedure(client);
+                loadProcedure(client);
+                callProcedure(client);
+                importSchemaFromContent(client);
+                importDataFromContent(client);
+                importSchemaFromFile(client);
+                importDataFromFile(client);
+            } catch (TuGraphDbRpcException e) {
+                log.info("Exception at " + e.GetErrorMethod() + " with errorCodeName: " + e.GetErrorCodeName() + " and "
+                        + "error: " + e.GetError());
+            }
+            log.info("----------------testRpcClientLogout--------------------");
+            client.logout();
+            try {
+                loadProcedure(client);
+            } catch (TuGraphDbRpcException e) {
+                log.info("rpc client has logout !! Catch Exception in " + e.getMessage());
+            }
         }
     }
 }

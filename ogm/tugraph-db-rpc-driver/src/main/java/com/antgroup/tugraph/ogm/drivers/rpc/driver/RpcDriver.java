@@ -101,7 +101,7 @@ public class RpcDriver extends AbstractConfigurableDriver {
         try {
             LOGGER.info("Shutting down rpc client {} ", this);
             if (rpcClient != null) {
-                rpcClient.stopClient();
+                rpcClient.logout();
             }
         } catch (Exception e) {
             LOGGER.warn("Unexpected Exception when closing tugraph client rpcClient: ", e);
@@ -132,13 +132,15 @@ public class RpcDriver extends AbstractConfigurableDriver {
         try {
             if (credentials != null) {
                 UsernamePasswordCredentials usernameAndPassword = (UsernamePasswordCredentials) this.credentials;
-                TuGraphDbRpcClient client = new TuGraphDbRpcClient(configuration.getURI(), usernameAndPassword.getUsername(), usernameAndPassword.getPassword());
+                TuGraphDbRpcClient client = new TuGraphDbRpcClient(configuration.getURI().split("//")[1], usernameAndPassword.getUsername(), usernameAndPassword.getPassword());
                 rpcClient = client;
             } else {
                 LOGGER.debug("Rpc Driver credentials not supplied");
             }
         } catch (ServiceUnavailableException e) {
             throw new ConnectionException(serviceUnavailableMessage, e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

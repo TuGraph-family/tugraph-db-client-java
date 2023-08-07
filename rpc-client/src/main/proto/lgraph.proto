@@ -773,10 +773,8 @@ service LGraphRPCService {
 };
 
 // For http2 server over RPC
-
 message HttpRequest {};
 message HttpResponse {};
-
 service LGraphHttpService {
-  rpc Query(HttpRequest) returns (HttpResponse);
+    rpc Query(HttpRequest) returns (HttpResponse);
 };
