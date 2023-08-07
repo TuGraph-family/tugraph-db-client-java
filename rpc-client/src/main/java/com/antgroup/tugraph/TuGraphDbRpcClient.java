@@ -10,7 +10,6 @@ import com.baidu.brpc.client.loadbalance.LoadBalanceStrategy;
 import com.baidu.brpc.protocol.Options;
 import com.google.protobuf.ByteString;
 import lgraph.Lgraph;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -19,7 +18,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 
-@Slf4j
 public class TuGraphDbRpcClient {
 
     private static final int TIMEOUTINMS = 60 * 60 * 1000;
@@ -275,7 +273,7 @@ public class TuGraphDbRpcClient {
     }
 
     public boolean loadPlugin(String sourceFile, String pluginType, String pluginName, String codeType,
-                                 String pluginDescription, boolean readOnly, String graph, double timeout) throws IOException {
+                                 String pluginDescription, boolean readOnly, String version, String graph, double timeout) throws IOException {
         byte[] content = binaryFileReader(sourceFile);
         if (content == null) {
             return false;
@@ -293,7 +291,9 @@ public class TuGraphDbRpcClient {
                 pluginDescription +
                 "'," +
                 readOnly +
-                ")";
+                ",'" +
+                version +
+                "')";
         callCypher(sb, graph, timeout);
         return true;
     }
@@ -346,12 +346,12 @@ public class TuGraphDbRpcClient {
         return response.getPluginResponse().getCallPluginResponse().getReply();
     }
 
-    public String listProcedures(String procedureType, String graph) {
+    public String listProcedures(String procedureType, String version, String graph) {
         Lgraph.PluginRequest.PluginType type =
                 "CPP".equals(procedureType) ? Lgraph.PluginRequest.PluginType.CPP : Lgraph.PluginRequest.PluginType.PYTHON;
         Lgraph.ListPluginRequest vreq = Lgraph.ListPluginRequest.newBuilder().build();
         Lgraph.PluginRequest req =
-                Lgraph.PluginRequest.newBuilder().setType(type).setListPluginRequest(vreq).setGraph(graph).build();
+                Lgraph.PluginRequest.newBuilder().setType(type).setListPluginRequest(vreq).setGraph(graph).setVersion(version).build();
         Lgraph.LGraphRequest request =
                 Lgraph.LGraphRequest.newBuilder().setIsWriteOp(false).setPluginRequest(req).setToken(this.token).build();
         Lgraph.LGraphResponse response = tuGraphService.HandleRequest(request);
@@ -365,7 +365,7 @@ public class TuGraphDbRpcClient {
                               String procedureType, String procedureName,
                               String codeType,
                               String procedureDescription, boolean readOnly,
-                              String graph) throws IOException {
+                              String version, String graph) throws IOException {
         Lgraph.PluginRequest.PluginType type =
                 "CPP".equals(procedureType) ? Lgraph.PluginRequest.PluginType.CPP : Lgraph.PluginRequest.PluginType.PYTHON;
         Lgraph.LoadPluginRequest.CodeType cType =
@@ -378,7 +378,7 @@ public class TuGraphDbRpcClient {
                 Lgraph.LoadPluginRequest.newBuilder().setName(procedureName).setDesc(procedureDescription)
                 .setReadOnly(readOnly).setCode(content).setCodeType(cType).build();
         Lgraph.PluginRequest req =
-                Lgraph.PluginRequest.newBuilder().setType(type).setLoadPluginRequest(lpRequest).setGraph(graph).build();
+                Lgraph.PluginRequest.newBuilder().setType(type).setLoadPluginRequest(lpRequest).setGraph(graph).setVersion(version).build();
         Lgraph.LGraphRequest request =
                 Lgraph.LGraphRequest.newBuilder().setIsWriteOp(true).setPluginRequest(req).setToken(this.token).build();
         Lgraph.LGraphResponse response = tuGraphService.HandleRequest(request);

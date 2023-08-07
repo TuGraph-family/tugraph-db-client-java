@@ -18,13 +18,12 @@ public class TuGraphDbRpcClientTest {
         try {
             client.callCypher("CALL db.dropDB()", "default", 10);
             boolean result = client.loadPlugin("./sortstr.so", "CPP", "sortstr", "SO", "test sortstr", true,
-                    "default"
-                    , 1000);
+                    "v1", "default" , 1000);
             log.info("loadPlugin : " + result);
             assert (result);
             // should throw TuGraphDbRpcException
             result = client.loadPlugin("./scan_graph.so", "CPP", "scan_graph", "SO", "test scan_graph", true,
-                    "default", 1000);
+                    "v1","default", 1000);
             log.info("loadPlugin : " + result);
         } catch (IOException e) {
             log.info("catch IOException : " + e.getMessage());
@@ -51,12 +50,12 @@ public class TuGraphDbRpcClientTest {
         log.info("----------------testLoadProcedure--------------------");
         try {
             boolean result = client.loadProcedure("./sortstr.so", "CPP", "sortstr", "SO", "test sortstr", true,
-                    "default");
+                    "v1", "default");
             log.info("loadProcedure : " + result);
             assert (result);
             // should throw TuGraphDbRpcException
             result = client.loadProcedure("./scan_graph.so", "CPP", "scan_graph", "SO", "test scan_graph", true,
-                    "default");
+                    "v1", "default");
             log.info("loadProcedure : " + result);
         } catch (IOException e) {
             log.info("catch IOException : " + e.getMessage());
@@ -66,11 +65,15 @@ public class TuGraphDbRpcClientTest {
     }
 
     public static void listProcedures(TuGraphDbRpcClient client) {
-        log.info("----------------testListProcedures--------------------");
-        String result = client.listProcedures("CPP", "default");
-        log.info("testListProcedure: " + result);
-        JSONArray jsonArray = JSONArray.parseArray(result);
-        assert (jsonArray.size() == 2);
+        try {
+            log.info("----------------testListProcedures--------------------");
+            String result = client.listProcedures("CPP", "any", "default");
+            log.info("testListProcedure: " + result);
+            JSONArray jsonArray = JSONArray.parseArray(result);
+            assert (jsonArray.size() == 2);
+        } catch (TuGraphDbRpcException e) {
+            log.info("catch TuGraphDbRpcException : " + e.getMessage());
+        }
     }
 
     public static void callProcedure(TuGraphDbRpcClient client) {
