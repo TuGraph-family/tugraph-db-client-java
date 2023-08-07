@@ -138,7 +138,7 @@ public class TestBase extends Client{
         log.info("----------------testCreate--------------------");
         // Test1  CREATE -> LOAD
         session.query("CALL db.createVertexLabel('Movie', 'title', 'title', STRING, false, 'released', INT32, true)", emptyMap());
-        session.query("CALL db.createVertexLabel('Actor', 'name', 'name', STRING, false)", emptyMap());
+        session.query("CALL db.createVertexLabel('Actor', 'name', 'name', STRING, false, 'works', STRING, true)", emptyMap());
         session.query("CALL db.createEdgeLabel('ACTS_IN', '[]')", emptyMap());
         session.query("CALL db.createVertexLabel('Director', 'name', 'name', STRING, false, 'age', INT16, true)", emptyMap());
         session.query("CALL db.createEdgeLabel('DIRECT', '[]')", emptyMap());
@@ -151,6 +151,7 @@ public class TestBase extends Client{
         // Test2  CREATE -> LOAD
         Movie movie = new Movie("The Matrix", 1999);
         Actor keanu = new Actor("Keanu Reeves");
+        keanu.setWorks("[{\"name\":\"The Matrix\",\"type\":\"movie\"},{\"name\":\"Phantom of the Opera\",\"type\":\"opera\"}]");
         keanu.actsIn(movie);
         Actor carrie = new Actor("Carrie-Ann Moss");
         carrie.actsIn(movie);

@@ -27,6 +27,7 @@ public class Actor {
     @Id
     private Long id;
     private String name;
+    private String works;
 
     @Relationship(type = "ACTS_IN", direction = Relationship.Direction.OUTGOING)
     private Set<Movie> movies = new HashSet<>();
@@ -58,6 +59,10 @@ public class Actor {
     public void setName(String name) {
         this.name = name;
     }
+
+    public String getWorks() { return works; }
+
+    public void setWorks(String works) { this.works = works; }
 
     public Set<Movie> getMovies() {
         return movies;

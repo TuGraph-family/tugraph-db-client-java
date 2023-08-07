@@ -191,7 +191,8 @@ public class RpcRequest implements Request {
                 continue;
             }
             if (mapProps.get(key) instanceof String) {
-                props += key + ":\"" + mapProps.get(key) + "\",";
+                String propValue = (mapProps.get(key).toString()).replace("\"", "\\\"");
+                props += key + ":\"" + propValue + "\",";
             } else {
                 props += key + ":" + mapProps.get(key).toString() + ",";
             }
