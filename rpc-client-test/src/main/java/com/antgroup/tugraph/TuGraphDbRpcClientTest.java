@@ -123,8 +123,8 @@ public class TuGraphDbRpcClientTest {
         jsonArray = JSONArray.parseArray(res);
         assert (jsonArray.size() == 1);
         JSONObject jsonObject = jsonArray.getJSONObject(0);
-        assert (jsonObject.containsKey("edgeLabels"));
-        assert ("PLAY_IN".equals(jsonObject.getString("edgeLabels")));
+        assert (jsonObject.containsKey("label"));
+        assert ("PLAY_IN".equals(jsonObject.getString("label")));
     }
 
     public static void importDataFromContent(TuGraphDbRpcClient client) throws Exception {
@@ -200,10 +200,10 @@ public class TuGraphDbRpcClientTest {
         assert (array.size() == 6);
         for (Object o : array) {
             JSONObject obj = (JSONObject) o;
-            assert ("HAS_CHILD".equals(obj.getString("edgeLabels")) || "MARRIED".equals(obj.getString("edgeLabels"))
-                    || "BORN_IN".equals(obj.getString("edgeLabels")) || "DIRECTED".equals(obj.getString("edgeLabels"))
-                    || "WROTE_MUSIC_FOR".equals(obj.getString("edgeLabels"))
-                    || "ACTED_IN".equals(obj.getString("edgeLabels")));
+            assert ("HAS_CHILD".equals(obj.getString("label")) || "MARRIED".equals(obj.getString("label"))
+                    || "BORN_IN".equals(obj.getString("label")) || "DIRECTED".equals(obj.getString("label"))
+                    || "WROTE_MUSIC_FOR".equals(obj.getString("label"))
+                    || "ACTED_IN".equals(obj.getString("label")));
         }
 
     }

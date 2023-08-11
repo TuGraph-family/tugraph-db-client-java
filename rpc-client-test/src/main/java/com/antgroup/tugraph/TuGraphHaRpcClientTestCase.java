@@ -71,8 +71,8 @@ public class TuGraphHaRpcClientTestCase {
         res = client.callCypher("CALL db.edgeLabels()", "default", 10);
         log.info("db.edgeLabels() : " + res);
         JSONObject jsonObject = (JSONObject)JSONObject.parseArray(res).get(0);
-        assert (jsonObject.containsKey("edgeLabels"));
-        assert ("PLAY_IN".equals(jsonObject.getString("edgeLabels")));
+        assert (jsonObject.containsKey("label"));
+        assert ("PLAY_IN".equals(jsonObject.getString("label")));
     }
 
     public static void importDataFromContent(TuGraphDbRpcClient client) throws Exception {
@@ -149,10 +149,10 @@ public class TuGraphHaRpcClientTestCase {
         assert (array.size() == 6);
         for (Object o : array) {
             JSONObject obj = (JSONObject) o;
-            assert ("HAS_CHILD".equals(obj.getString("edgeLabels")) || "MARRIED".equals(obj.getString("edgeLabels"))
-                    || "BORN_IN".equals(obj.getString("edgeLabels")) || "DIRECTED".equals(obj.getString("edgeLabels"))
-                    || "WROTE_MUSIC_FOR".equals(obj.getString("edgeLabels"))
-                    || "ACTED_IN".equals(obj.getString("edgeLabels")));
+            assert ("HAS_CHILD".equals(obj.getString("label")) || "MARRIED".equals(obj.getString("label"))
+                    || "BORN_IN".equals(obj.getString("label")) || "DIRECTED".equals(obj.getString("label"))
+                    || "WROTE_MUSIC_FOR".equals(obj.getString("label"))
+                    || "ACTED_IN".equals(obj.getString("label")));
         }
 
     }
@@ -358,8 +358,11 @@ public class TuGraphHaRpcClientTestCase {
     }
 
     public static void haClientTest() throws Exception {
-        host = executiveWithValue("hostname -I");
-        host = host.substring(0, host.length() - 1);
+        host = executiveWithValue("hostname -I").trim();
+        int len = host.indexOf(' ');
+        if (len != -1) {
+            host = host.substring(0, len);
+        }
 
         // start HA group
         executive("mkdir ha1 && cp -r ../../src/server/lgraph_ha.json ./lgraph_server ./resource ha1 && cd ha1 && ./lgraph_server --host " + host + " --port 27072 --enable_rpc true --enable_ha true --ha_node_offline_ms 5000 --ha_node_remove_ms 10000 --rpc_port 29092 --directory ./db --log_dir ./log  --ha_conf " + host + ":29092," + host + ":29093," + host + ":29094 -c lgraph_ha.json -d start");
