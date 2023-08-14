@@ -5,7 +5,8 @@ This repo is a Java client for developers to connect to TuGraph.
 ## Features
 
 - RPC client in Java
-- OGM, short for Object-Graph Mapping, supports mapping entities and relations in graph to Java objects, which speeds up the Java development process.
+- OGM, short for Object-Graph Mapping, supports mapping entities and relations in graph to Java objects, which speeds up
+  the Java development process.
 
 ## Prerequisites
 
@@ -19,25 +20,26 @@ This repo is a Java client for developers to connect to TuGraph.
 If you are using Maven to manage the dependency in your Java project, you can add the following snippet to your pom.xml
 
 ```xml
+
 <dependency>
     <groupId>com.antgroup.tugraph</groupId>
     <artifactId>tugraph-db-java-rpc-client</artifactId>
     <version>${version}</version>
 </dependency>
 <dependency>
-    <groupId>com.antgroup.tugraph</groupId>
-    <artifactId>tugraph-db-ogm-api</artifactId>
-    <version>${version}</version>
+  <groupId>com.antgroup.tugraph</groupId>
+  <artifactId>tugraph-db-ogm-api</artifactId>
+  <version>${version}</version>
 </dependency>
 <dependency>
-    <groupId>com.antgroup.tugraph</groupId>
-    <artifactId>tugraph-db-ogm-core</artifactId>
-    <version>${version}</version>
+  <groupId>com.antgroup.tugraph</groupId>
+  <artifactId>tugraph-db-ogm-core</artifactId>
+  <version>${version}</version>
 </dependency>
 <dependency>
-    <groupId>com.antgroup.tugraph</groupId>
-    <artifactId>tugraph-db-rpc-driver</artifactId>
-    <version>${version}</version>
+  <groupId>com.antgroup.tugraph</groupId>
+  <artifactId>tugraph-db-rpc-driver</artifactId>
+  <version>${version}</version>
 </dependency>
 ```
 
@@ -68,13 +70,13 @@ Please refer to the code example:
 | Cypher query with specific result type | T queryForObject(Class\<T> objectType, String cypher, Map<String, ?> parameters) |
 | Cypher query                           | Result query(String cypher, Map<String, ?> parameters)                           |
 
-
 ## FAQ
 
 ### Upgrade the version
 
 Revision feature is used in this project to keep all the versions in submodules consistent.
-If you want to upgrade the version, e.g. for SNAPSHOT version, just set the `${revision}` property instead of using `mvn version:set`.
+If you want to upgrade the version, e.g. for SNAPSHOT version, just set the `${revision}` property instead of
+using `mvn version:set`.
 
 ## Version Map
 
@@ -82,9 +84,12 @@ If you want to upgrade the version, e.g. for SNAPSHOT version, just set the `${r
 |----------------|-----------------|
 | 1.1.1          | 3.3.3           |
 | 1.2.1, 1.2.2   | 3.4.x, 3.5.0    |
+| 1.3.0          | 3.6.0           |
 
 **Note**:
-- 3.3.0~3.3.2 versions of TuGraph Server are legacy versions before java-client refactoring, which are not supported by this repo.
+
+- 3.3.0~3.3.2 versions of TuGraph Server are legacy versions before java-client refactoring, which are not supported by
+  this repo.
 - 1.1.0 and 1.2.0 is not available due to the unconsumable issue introduced by ${revision} variable in pom file[1].
 
 [1] https://stackoverflow.com/questions/41086512/maven-issue-to-build-one-module-using-revision-property
