@@ -359,19 +359,27 @@ public class TuGraphDbRpcClient {
             this.url = url;
         }
 
-        private String handleCypherRequest(String query, String graph, double timeout) {
-            Lgraph.CypherRequest cypherRequest =
-                    Lgraph.CypherRequest.newBuilder().setQuery(query).setResultInJsonFormat(true).setGraph(graph)
-                            .setTimeout(timeout).build();
+        private String handleGraphQueryRequest(Lgraph.ProtoGraphQueryType type, String query, String graph, double timeout) {
+            Lgraph.GraphQueryRequest queryRequest =
+                    Lgraph.GraphQueryRequest.newBuilder().setType(type).setQuery(query).setResultInJsonFormat(true)
+                            .setGraph(graph).setTimeout(timeout).build();
             Lgraph.LGraphRequest request =
-                    Lgraph.LGraphRequest.newBuilder().setCypherRequest(cypherRequest).setToken(this.token)
+                    Lgraph.LGraphRequest.newBuilder().setGraphQueryRequest(queryRequest).setToken(this.token)
                             .setClientVersion(serverVersion).build();
             Lgraph.LGraphResponse response = tuGraphService.HandleRequest(request);
             if (response.getErrorCode().getNumber() != Lgraph.LGraphResponse.ErrorCode.SUCCESS_VALUE) {
-                throw new TuGraphDbRpcException(response.getErrorCode(), response.getError(), "CallCypher");
+                throw new TuGraphDbRpcException(response.getErrorCode(), response.getError(), "handleGraphQueryRequest");
             }
             serverVersion = Math.max(response.getServerVersion(), serverVersion);
-            return response.getCypherResponse().getJsonResult();
+            return response.getGraphQueryResponse().getJsonResult();
+        }
+
+        private String handleCypherRequest(String query, String graph, double timeout) {
+            return handleGraphQueryRequest(Lgraph.ProtoGraphQueryType.CYPHER, query, graph, timeout);
+        }
+
+        private String handleGqlRequest(String query, String graph, double timeout) {
+            return handleGraphQueryRequest(Lgraph.ProtoGraphQueryType.GQL, query, graph, timeout);
         }
 
         // parse delimiter and process strings like \r \n \002 \0xA
@@ -569,6 +577,10 @@ public class TuGraphDbRpcClient {
 
         public String callCypher(String cypher, String graph, double timeout) {
             return handleCypherRequest(cypher, graph, timeout);
+        }
+
+        public String callGql(String gql, String graph, double timeout) {
+            return handleGqlRequest(gql, graph, timeout);
         }
 
         public String callProcedure(String procedureType, String procedureName, String param, double procedureTimeOut,

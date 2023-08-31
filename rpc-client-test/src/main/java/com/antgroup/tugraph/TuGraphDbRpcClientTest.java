@@ -246,9 +246,9 @@ public class TuGraphDbRpcClientTest {
     public static void main(String[] args) throws Exception {
         log.info("----------------startMain--------------------");
         if (args.length != 3 && args.length != 0) {
-            log.info("java -jar -ea tugraph-db-java-rpc-client-test-1.3.0.jar [host:port] [user] "
+            log.info("java -jar -ea tugraph-db-java-rpc-client-test-1.4.0.jar [host:port] [user] "
                     + "[password]");
-            log.info("java -jar -ea tugraph-db-java-rpc-client-test-1.3.0.jar");
+            log.info("java -jar -ea tugraph-db-java-rpc-client-test-1.4.0.jar");
             return;
         }
         if (args.length == 0) {
