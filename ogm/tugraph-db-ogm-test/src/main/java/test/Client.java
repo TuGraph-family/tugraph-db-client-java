@@ -19,20 +19,30 @@ import com.antgroup.tugraph.ogm.config.Configuration;
 import com.antgroup.tugraph.ogm.driver.Driver;
 import com.antgroup.tugraph.ogm.drivers.rpc.driver.RpcDriver;
 
+import java.util.List;
+
 public class Client {
     private static Configuration.Builder baseConfigurationBuilder;
 
     protected static Driver getDriver(String[] args) {
-        String databaseUri = "list://" + args[0];
-        String username = args[1];
-        String password = args[2];
-
         Driver driver = new RpcDriver();
         baseConfigurationBuilder = new Configuration.Builder()
             .database("default")
-            .uri(databaseUri)
+            .uri(args[0])
             .verifyConnection(true)
-            .credentials(username, password);
+            .credentials(args[1], args[2]);
+        driver.configure(baseConfigurationBuilder.build());
+        return driver;
+    }
+
+    protected static Driver getDriverWithHA(List<String> databaseUris, String username, String password) {
+        Driver driver = new RpcDriver();
+        String[] uris = databaseUris.toArray(new String[databaseUris.size()]);
+        baseConfigurationBuilder = new Configuration.Builder()
+                .database("default")
+                .uris(uris)
+                .verifyConnection(true)
+                .credentials(username, password);
         driver.configure(baseConfigurationBuilder.build());
         return driver;
     }

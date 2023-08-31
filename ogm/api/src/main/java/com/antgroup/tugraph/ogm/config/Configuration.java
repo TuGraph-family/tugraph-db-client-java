@@ -188,12 +188,11 @@ public class Configuration {
 
     private URI getSingleURI() {
         try {
-
             if (uri != null) {
-                return new URI(uri);
+                return new URI("list://" + uri);
             }
             if (uris != null && uris.length >= 1) {
-                return new URI(uris[0]);
+                return new URI("list://" + uris[0]);
             }
         } catch (URISyntaxException e) {
             throw new RuntimeException("Could not configure supplied URI in Configuration", e);

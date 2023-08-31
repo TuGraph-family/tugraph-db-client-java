@@ -16,6 +16,8 @@
 package test;
 
 import com.alibaba.fastjson.JSONObject;
+import com.antgroup.tugraph.TuGraphDbRpcException;
+import com.antgroup.tugraph.ogm.driver.Driver;
 import entity.Actor;
 import entity.Movie;
 import com.antgroup.tugraph.ogm.cypher.ComparisonOperator;
@@ -27,32 +29,42 @@ import com.antgroup.tugraph.ogm.cypher.Filter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.*;
 
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.*;
 
 
-public class TestBase extends Client{
+public class TestBase extends Client {
     private static final Logger log = LoggerFactory.getLogger(TestBase.class);
     private static SessionFactory sessionFactory;
     private static Session session;
 
+    private static String host;
 
-    public static void main(String[] args) {
-        if (args.length != 3) {
-            log.info("java -jar target/tugraph-ogm-test-1.2.1.jar [host:port] [user] [password]");
+    public static void main(String[] args) throws Exception {
+        if (args.length != 3 && args.length != 0) {
+            log.info("java -jar target/tugraph-ogm-test-x.x.x.jar [host:port] [user] [password]");
+            log.info("java -jar target/tugraph-ogm-test-x.x.x.jar");
             return;
         }
-        sessionFactory = new SessionFactory(getDriver(args), "entity");
-        session = sessionFactory.openSession();
-
-        testCreate();
-        testQuery();
-        testUpdate();
-        testDelete();
+        if (args.length == 0) {
+            haClientTest();
+        } else {
+            sessionFactory = new SessionFactory(getDriver(args), "entity");
+            session = sessionFactory.openSession();
+            testCreate();
+            testQuery();
+            testUpdate();
+            testDelete();
+        }
     }
 
+    //--------------------------------    test base    ------------------------------------------------
     private static void testDelete() {
         log.info("----------------testDelete--------------------");
         // Test1  CREATE -> DELETE
@@ -187,4 +199,190 @@ public class TestBase extends Client{
         Actor newactor = session.load(Actor.class, actor.getId());
         assertThat(newactor.getName()).isEqualTo("NOBU Reeves");
     }
+
+    //--------------------------------    test base end   ------------------------------------------------
+
+    //--------------------------------    test ha   ------------------------------------------------
+    public static void executive(String stmt) {
+        Runtime runtime = Runtime.getRuntime();
+
+        try {
+            String[] command = {"/bin/sh", "-c", stmt};
+
+            Process process = runtime.exec(command);
+            String inStr = consumeInputStream(process.getInputStream());
+            String errStr = consumeInputStream(process.getErrorStream());
+
+            int proc = process.waitFor();
+            if (proc == 0) {
+                log.info("succ");
+                log.info(inStr);
+            } else {
+                log.info("fail");
+                log.info(errStr);
+            }
+        } catch (Exception e) {
+            log.info(e.getMessage());
+        }
+    }
+
+    public static String consumeInputStream(InputStream is) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(is, "GBK"));
+        String s;
+        StringBuilder sb = new StringBuilder();
+        while ((s = br.readLine()) != null) {
+            log.info(s);
+            sb.append(s);
+        }
+        return sb.toString();
+    }
+
+    public static String executiveWithValue(String stmt) {
+        Runtime runtime = Runtime.getRuntime();
+        String inStr = "";
+
+        try {
+            String[] command = {"/bin/sh", "-c", stmt};
+
+            Process process = runtime.exec(command);
+
+            inStr = consumeInputStream(process.getInputStream());
+            // String errStr = consumeInputStream(process.getErrorStream());
+
+            int proc = process.waitFor();
+            if (proc == 0) {
+                log.info("succ");
+            } else {
+                log.info("fail");
+            }
+        } catch (Exception e) {
+            log.info(e.getMessage());
+        }
+        return inStr;
+    }
+
+    public static Driver startHaClient(String port) {
+        log.info("----------------startClient--------------------");
+        String[] args = {
+                host + ":" + port,
+                "admin",
+                "73@TuGraph"
+        };
+        Driver driver = getDriver(args);
+        sessionFactory = new SessionFactory(driver, "entity");
+        session = sessionFactory.openSession();
+        return driver;
+    }
+
+    public static Driver startHaClient(List<String> ports) {
+        log.info("----------------startClient--------------------");
+        List<String> urls = new ArrayList<>();
+        for (String port: ports) {
+            urls.add(host + ":" + port);
+        }
+        String user = "admin";
+        String password = "73@TuGraph";
+        Driver driver = getDriverWithHA(urls, user, password);
+        sessionFactory = new SessionFactory(driver, "entity");
+        session = sessionFactory.openSession();
+        return driver;
+    }
+
+    public static void haClientTest() throws Exception {
+        host = executiveWithValue("hostname -I").trim();
+        int len = host.indexOf(' ');
+        if (len != -1) {
+            host = host.substring(0, len);
+        }
+
+        // start HA group
+        executive("mkdir ha1 && cp -r ../../src/server/lgraph_ha.json ./lgraph_server ./resource ha1 && cd ha1 && ./lgraph_server --host " + host + " --port 27072 --enable_rpc true --enable_ha true --ha_node_offline_ms 5000 --ha_node_remove_ms 10000 --rpc_port 29092 --directory ./db --log_dir ./log  --ha_conf " + host + ":29092," + host + ":29093," + host + ":29094 -c lgraph_ha.json -d start");
+        Thread.sleep(3000);
+
+        executive("mkdir ha2 && cp -r ../../src/server/lgraph_ha.json ./lgraph_server ./resource ha2 && cd ha2 && ./lgraph_server --host " + host + " --port 27073 --enable_rpc true --enable_ha true --ha_node_offline_ms 5000 --ha_node_remove_ms 10000 --rpc_port 29093 --directory ./db --log_dir ./log  --ha_conf " + host + ":29092," + host + ":29093," + host + ":29094 -c lgraph_ha.json -d start");
+        Thread.sleep(3000);
+
+        executive("mkdir ha3 && cp -r ../../src/server/lgraph_ha.json ./lgraph_server ./resource ha3 && cd ha3 && ./lgraph_server --host " + host + " --port 27074 --enable_rpc true --enable_ha true --ha_node_offline_ms 5000 --ha_node_remove_ms 10000 --rpc_port 29094 --directory ./db --log_dir ./log  --ha_conf " + host + ":29092," + host + ":29093," + host + ":29094 -c lgraph_ha.json -d start");
+        Thread.sleep(3000);
+
+        Driver driver = startHaClient("29092");
+        try {
+
+            log.info("---------client start success!--------");
+            Thread.sleep(5000);
+
+            testCreate();
+
+            // test urlTable
+            List<String> urls = new ArrayList<>();
+            urls.add("29092");
+            urls.add("29093");
+            urls.add("29094");
+            Driver urlDriver = startHaClient(urls);
+
+            testQuery();
+            urlDriver.close();
+
+            // stop follower
+            log.info("-------------------------stopping follower-------------------------");
+            driver.close();
+            Thread.sleep(1000 * 7);
+            executive("kill -2 $(ps -ef | grep 27073 | grep -v grep | awk '{print $2}')");
+            Thread.sleep(1000 * 13);
+            driver = startHaClient("29092");
+            Thread.sleep(1000 * 7);
+
+            log.info("-------------------------stop follower successfully-------------------------");
+            testQuery();
+            // restart follower
+            log.info("-------------------------starting follower-------------------------");
+            driver.close();
+            Thread.sleep(1000 * 7);
+            executive("cd ha2 && ./lgraph_server --host " + host + " --port 27073 --enable_rpc true --enable_ha true --ha_node_offline_ms 5000 --ha_node_remove_ms 10000 --rpc_port 29093 --directory ./db --log_dir ./log  --ha_conf " + host + ":29092," + host + ":29093," + host + ":29094 -c lgraph_ha.json -d start");
+            Thread.sleep(1000 * 13);
+            driver = startHaClient("29092");
+            Thread.sleep(1000 * 7);
+
+            log.info("-------------------------start follower successfully-------------------------");
+            testQuery();
+
+            // stop leader
+            log.info("-------------------------stopping leader-------------------------");
+            driver.close();
+            Thread.sleep(1000 * 7);
+            executive("kill -2 $(ps -ef | grep 27072 | grep -v grep | awk '{print $2}')");
+            Thread.sleep(1000 * 13);
+            driver = startHaClient("29093");
+            Thread.sleep(1000 * 7);
+
+            log.info("-------------------------stop leader successfully-------------------------");
+            testQuery();
+            // restart leader
+            log.info("-------------------------starting leader-------------------------");
+            driver.close();
+            Thread.sleep(1000 * 7);
+            executive("cd ha1 && ./lgraph_server --host " + host + " --port 27072 --enable_rpc true --enable_ha true --ha_node_offline_ms 5000 --ha_node_remove_ms 10000 --rpc_port 29092 --directory ./db --log_dir ./log  --ha_conf " + host + ":29092," + host + ":29093," + host + ":29094 -c lgraph_ha.json -d start");
+            Thread.sleep(1000 * 13);
+            driver = startHaClient("29093");
+            Thread.sleep(1000 * 7);
+
+            log.info("-------------------------start leader successfully-------------------------");
+            testQuery();
+        } catch (TuGraphDbRpcException e) {
+            log.info("Exception at " + e.GetErrorMethod() + " with errorCodeName: " + e.GetErrorCodeName() + " and error: " + e.GetError());
+            log.info(e.getMessage());
+        } catch (Exception e2) {
+            log.info(e2.getMessage());
+        } finally {
+            // stop leader and follower
+            driver.close();
+            for (int i = 27072; i <= 27074; i++) {
+                executive("kill -2 $(ps -ef | grep " + i + " | grep -v grep | awk '{print $2}')");
+            }
+            for (int i = 1; i <= 3; i++) {
+                executive("rm -rf ha" + i);
+            }
+        }
+    }
+    //--------------------------------    test ha end  ------------------------------------------------
 }

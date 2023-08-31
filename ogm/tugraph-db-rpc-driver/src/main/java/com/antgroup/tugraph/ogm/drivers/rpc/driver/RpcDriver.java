@@ -20,6 +20,8 @@
 package com.antgroup.tugraph.ogm.drivers.rpc.driver;
 
 import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -132,8 +134,20 @@ public class RpcDriver extends AbstractConfigurableDriver {
         try {
             if (credentials != null) {
                 UsernamePasswordCredentials usernameAndPassword = (UsernamePasswordCredentials) this.credentials;
-                TuGraphDbRpcClient client = new TuGraphDbRpcClient(configuration.getURI().split("//")[1], usernameAndPassword.getUsername(), usernameAndPassword.getPassword());
-                rpcClient = client;
+                String[] uris = configuration.getURIS();
+                String uri = configuration.getURI();
+                boolean useURIs = uris != null && Arrays.stream(uris).anyMatch(u -> u != null && !u.isEmpty());
+                TuGraphDbRpcClient client;
+                if (useURIs) {
+                    List<String> urisList = Arrays.asList(uris);
+                    client = new TuGraphDbRpcClient(urisList, usernameAndPassword.getUsername(), usernameAndPassword.getPassword());
+                    rpcClient = client;
+                } else if (uri != null && !uri.isEmpty()) {
+                    client = new TuGraphDbRpcClient(uri, usernameAndPassword.getUsername(), usernameAndPassword.getPassword());
+                    rpcClient = client;
+                } else {
+                    LOGGER.debug("Failed to get correct url");
+                }
             } else {
                 LOGGER.debug("Rpc Driver credentials not supplied");
             }

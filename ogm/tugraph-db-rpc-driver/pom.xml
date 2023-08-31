@@ -45,6 +45,7 @@
         <dependency>
             <groupId>com.antgroup.tugraph</groupId>
             <artifactId>tugraph-db-java-rpc-client</artifactId>
+            <version>${revision}</version>
         </dependency>
     </dependencies>
 </project>
