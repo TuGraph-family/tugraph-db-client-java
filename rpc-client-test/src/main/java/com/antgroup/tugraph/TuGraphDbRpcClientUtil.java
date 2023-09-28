@@ -8,7 +8,7 @@ import java.io.IOException;
 
 public interface TuGraphDbRpcClientUtil {
 
-    String ImportSchema = "{\"schema\" :" +
+    String IMPORT_SCHEMA = "{\"schema\" :" +
             "    [" +
             "         {" +
             "             \"label\" : \"Person\"," +
@@ -43,7 +43,7 @@ public interface TuGraphDbRpcClientUtil {
             "    ]" +
             "}";
 
-    String ImportDataPersonDesc = "{\"files\": [" +
+    String IMPORT_DATA_PERSON_DESC = "{\"files\": [" +
             "    {" +
             "        \"columns\": [" +
             "            \"name\"," +
@@ -56,7 +56,7 @@ public interface TuGraphDbRpcClientUtil {
             "    ]" +
             "}";
 
-    String ImportDataPerson = "Rachel Kempson,1910,10086\n" +
+    String IMPORT_DATA_PERSON = "Rachel Kempson,1910,10086\n" +
             "Michael Redgrave,1908,10087\n" +
             "Vanessa Redgrave,1937,10088\n" +
             "Corin Redgrave,1939,10089\n" +
@@ -75,7 +75,7 @@ public interface TuGraphDbRpcClientUtil {
         client.callCypher("CALL db.dropDB()", "default", 10);
 
         try {
-            boolean ret = client.importSchemaFromContent(TuGraphDbRpcClientUtil.ImportSchema, "default", 1000);
+            boolean ret = client.importSchemaFromContent(TuGraphDbRpcClientUtil.IMPORT_SCHEMA, "default", 1000);
             log.info("importSchemaFromContent : " + ret);
             assert (ret);
         } catch (Exception e) {
@@ -107,7 +107,7 @@ public interface TuGraphDbRpcClientUtil {
     static void importDataFromContent(Logger log, TuGraphDbRpcClient client, boolean isHa) throws Exception {
         log.info("----------------testImportDataFromContent--------------------");
         try {
-            boolean ret = client.importDataFromContent(TuGraphDbRpcClientUtil.ImportDataPersonDesc, TuGraphDbRpcClientUtil.ImportDataPerson, ",", true, 16, "default", 1000);
+            boolean ret = client.importDataFromContent(TuGraphDbRpcClientUtil.IMPORT_DATA_PERSON_DESC, TuGraphDbRpcClientUtil.IMPORT_DATA_PERSON, ",", true, 16, "default", 1000);
             log.info("importDataFromContent : " + ret);
             assert (ret);
         } catch (Exception e) {

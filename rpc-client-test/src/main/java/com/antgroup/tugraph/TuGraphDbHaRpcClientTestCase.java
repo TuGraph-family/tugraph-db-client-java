@@ -89,8 +89,8 @@ public class TuGraphDbHaRpcClientTestCase {
     public static void testQueryToLeader(TuGraphDbRpcClient client) throws Exception {
         log.info("----------------testQueryToLeader--------------------");
         client.callCypher("CALL db.dropDB()", "default", 10);
-        boolean ret = client.importSchemaFromContent(TuGraphDbRpcClientUtil.ImportSchema, "default", 1000)
-                && client.importDataFromContent(TuGraphDbRpcClientUtil.ImportDataPersonDesc, TuGraphDbRpcClientUtil.ImportDataPerson, ",", true, 16, "default", 1000);
+        boolean ret = client.importSchemaFromContent(TuGraphDbRpcClientUtil.IMPORT_SCHEMA, "default", 1000)
+                && client.importDataFromContent(TuGraphDbRpcClientUtil.IMPORT_DATA_PERSON_DESC, TuGraphDbRpcClientUtil.IMPORT_DATA_PERSON, ",", true, 16, "default", 1000);
         assert (ret);
         String res = client.callCypherToLeader("MATCH (n) RETURN COUNT(n)", "default", 10);
         JSONArray jsonArray = JSONArray.parseArray(res);
