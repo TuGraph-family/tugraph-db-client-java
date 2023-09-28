@@ -102,7 +102,23 @@ public class TuGraphDbRpcClient {
     }
 
     public String callGql(String gql, String graph, double timeout, String url) throws Exception {
-        return doubleCheckQuery(()-> getClientByNode(url).callCypher(gql, graph, timeout));
+        return doubleCheckQuery(()-> getClientByNode(url).callGql(gql, graph, timeout));
+    }
+
+    public String callCypherToLeader(String cypher, String graph, double timeout) throws Exception {
+        if (clientType == ClientType.SINGLE_CONNECTION){
+            return baseClient.callCypher(cypher, graph, timeout);
+        } else {
+            return doubleCheckQuery(()-> leaderClient.callCypher(cypher, graph, timeout));
+        }
+    }
+
+    public String callGqlToLeader(String gql, String graph, double timeout) throws Exception {
+        if (clientType == ClientType.SINGLE_CONNECTION){
+            return baseClient.callGql(gql, graph, timeout);
+        } else {
+            return doubleCheckQuery(()-> leaderClient.callGql(gql, graph, timeout));
+        }
     }
 
     public String callProcedure(String procedureType, String procedureName, String param, double procedureTimeOut,
@@ -127,6 +143,15 @@ public class TuGraphDbRpcClient {
     public String callProcedure(String procedureType, String procedureName, String param, double procedureTimeOut,
                                 boolean inProcess, String graph, String url) throws Exception {
         return doubleCheckQuery(()-> getClientByNode(url).callProcedure(procedureType, procedureName, param, procedureTimeOut, inProcess, graph));
+    }
+
+    public String callProcedureToLeader(String procedureType, String procedureName, String param, double procedureTimeOut,
+                                boolean inProcess, String graph) throws Exception {
+        if (clientType == ClientType.SINGLE_CONNECTION) {
+            return baseClient.callProcedure(procedureType, procedureName, param, procedureTimeOut, inProcess, graph);
+        } else {
+            return doubleCheckQuery(()-> leaderClient.callProcedure(procedureType, procedureName, param, procedureTimeOut, inProcess, graph));
+        }
     }
 
     public boolean loadProcedure(String sourceFile, String procedureType, String procedureName, String codeType,
