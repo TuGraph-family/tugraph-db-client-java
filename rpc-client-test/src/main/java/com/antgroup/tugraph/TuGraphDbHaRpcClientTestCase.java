@@ -101,7 +101,7 @@ public class TuGraphDbHaRpcClientTestCase {
 
         ret = client.loadProcedure("./sortstr.so", "CPP", "sortstr", "SO", "test sortstr", true, "v1",  "default");
         assert ret;
-        String result = client.callProcedure("CPP", "sortstr", "gecfb", 1000, false, "default");
+        String result = client.callProcedureToLeader("CPP", "sortstr", "gecfb", 1000, false, "default");
         log.info("testCallProcedure : " + result);
         assert ("bcefg".equals(result));
     }
