@@ -10,175 +10,22 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
 @Slf4j
-public class TuGraphHaRpcClientTestCase {
+public class TuGraphDbHaRpcClientTestCase {
 
     public static void importSchemaFromContent(TuGraphDbRpcClient client) throws Exception {
-        log.info("----------------testImportSchemaFromContent--------------------");
-        client.callCypher("CALL db.dropDB()", "default", 10);
-        String schema = "{\"schema\" :" +
-                "    [" +
-                "         {" +
-                "             \"label\" : \"Person\"," +
-                "             \"type\" : \"VERTEX\"," +
-                "             \"primary\" : \"name\"," +
-                "             \"properties\" : [" +
-                "                 {\"name\" : \"name\", \"type\":\"STRING\"}," +
-                "                 {\"name\" : \"birthyear\", \"type\":\"INT16\", \"optional\":true}," +
-                "                 {\"name\" : \"phone\", \"type\":\"INT16\",\"unique\":true, \"index\":true}" +
-                "             ]" +
-                "         }," +
-                "        {" +
-                "            \"label\" : \"Film\"," +
-                "            \"type\" : \"VERTEX\"," +
-                "            \"primary\" : \"title\"," +
-                "            \"properties\" : [" +
-                "                {\"name\" : \"title\", \"type\":\"STRING\"} " +
-                "            ]" +
-                "        }," +
-                "       {" +
-                "	        \"label\": \"PLAY_IN\"," +
-                "	        \"type\": \"EDGE\"," +
-                "	        \"properties\": [{" +
-                "		        \"name\": \"role\"," +
-                "		        \"type\": \"STRING\", " +
-                "		        \"optional\": true " +
-                "	        }]," +
-                "	        \"constraints\": [" +
-                "		        [\"Person\", \"Film\"]" +
-                "	        ]" +
-                "       }" +
-                "    ]" +
-                "}";
-
-        try {
-            boolean ret = client.importSchemaFromContent(schema, "default", 1000);
-            log.info("importSchemaFromContent : " + ret);
-            assert (ret);
-        } catch (Exception e) {
-            log.info("catch exception : " + e.getMessage());
-        }
-
-        Thread.sleep(1000 * 5);
-        String res = client.callCypher("CALL db.vertexLabels()", "default", 10);
-        log.info("db.vertexLabels() : " + res);
-        JSONArray jsonArray = JSONArray.parseArray(res);
-        assert (jsonArray.size() == 2);
-
-        for (Object o : jsonArray) {
-            JSONObject obj = (JSONObject) o;
-            assert ("Person".equals(obj.getString("label")) || "Film".equals(obj.getString("label")));
-        }
-        res = client.callCypher("CALL db.edgeLabels()", "default", 10);
-        log.info("db.edgeLabels() : " + res);
-        JSONObject jsonObject = (JSONObject)JSONObject.parseArray(res).get(0);
-        assert (jsonObject.containsKey("label"));
-        assert ("PLAY_IN".equals(jsonObject.getString("label")));
+        TuGraphDbRpcClientUtil.importSchemaFromContent(log, client, true);
     }
 
     public static void importDataFromContent(TuGraphDbRpcClient client) throws Exception {
-
-        log.info("----------------testImportDataFromContent--------------------");
-        String personDesc = "{\"files\": [" +
-                "    {" +
-                "        \"columns\": [" +
-                "            \"name\"," +
-                "            \"birthyear\"," +
-                "            \"phone\"]," +
-                "        \"format\": \"CSV\"," +
-                "        \"header\": 0," +
-                "        \"label\": \"Person\" " +
-                "        }" +
-                "    ]" +
-                "}";
-
-        String person = "Rachel Kempson,1910,10086\n" +
-                "Michael Redgrave,1908,10087\n" +
-                "Vanessa Redgrave,1937,10088\n" +
-                "Corin Redgrave,1939,10089\n" +
-                "Liam Neeson,1952,10090\n" +
-                "Natasha Richardson,1963,10091\n" +
-                "Richard Harris,1930,10092\n" +
-                "Dennis Quaid,1954,10093\n" +
-                "Lindsay Lohan,1986,10094\n" +
-                "Jemma Redgrave,1965,10095\n" +
-                "Roy Redgrave,1873,10096\n" +
-                "John Williams,1932,10097\n" +
-                "Christopher Nolan,1970,10098\n";
-
-
-        try {
-            boolean ret = client.importDataFromContent(personDesc, person, ",", true, 16, "default", 1000);
-            log.info("importDataFromContent : " + ret);
-            assert (ret);
-        } catch (Exception e) {
-            log.info("catch exception : " + e.getMessage());
-        }
-        Thread.sleep(1000 * 5);
-        String res = client.callCypher("MATCH (n) RETURN COUNT(n)", "default", 10);
-        log.info("MATCH (n) RETURN COUNT(n) : " + res);
-        JSONObject jsonObject = (JSONObject)JSONObject.parseArray(res).get(0);
-        assert (jsonObject.containsKey("COUNT(n)"));
-        assert (jsonObject.getIntValue("COUNT(n)") == 13);
+        TuGraphDbRpcClientUtil.importSchemaFromContent(log, client, true);
     }
 
     public static void importSchemaFromFile(TuGraphDbRpcClient client) throws Exception {
-        log.info("----------------testImportSchemaFromFile--------------------");
-        client.callCypher("CALL db.dropDB()", "default", 10);
-        try {
-            boolean ret = client.importSchemaFromFile("./data/yago/yago.conf", "default", 1000);
-            log.info("importSchemaFromFile : " + ret);
-            assert (ret);
-        } catch (Exception e) {
-            log.info("catch exception : " + e.getMessage());
-        }
-
-        Thread.sleep(1000 * 5);
-        String res = client.callCypher("CALL db.vertexLabels()", "default", 10);
-        log.info("db.vertexLabels() : " + res);
-        JSONArray array = JSONArray.parseArray(res);
-        assert (array.size() == 3);
-        for (Object value : array) {
-            JSONObject obj = (JSONObject) value;
-            assert ("Person".equals(obj.getString("label")) || "Film".equals(obj.getString("label"))
-                    || "City".equals(obj.getString("label")));
-        }
-
-        res = client.callCypher("CALL db.edgeLabels()", "default", 10);
-        log.info("db.edgeLabels() : " + res);
-        array = JSONArray.parseArray(res);
-        assert (array.size() == 6);
-        for (Object o : array) {
-            JSONObject obj = (JSONObject) o;
-            assert ("HAS_CHILD".equals(obj.getString("label")) || "MARRIED".equals(obj.getString("label"))
-                    || "BORN_IN".equals(obj.getString("label")) || "DIRECTED".equals(obj.getString("label"))
-                    || "WROTE_MUSIC_FOR".equals(obj.getString("label"))
-                    || "ACTED_IN".equals(obj.getString("label")));
-        }
-
+        TuGraphDbRpcClientUtil.importSchemaFromFile(log, client, true);
     }
 
     public static void importDataFromFile(TuGraphDbRpcClient client) throws Exception {
-        log.info("----------------testImportDataFromFile--------------------");
-        try {
-            boolean ret = client.importDataFromFile("./data/yago/yago.conf", ",", true, 16, 0, "default", 1000);
-            log.info("importDataFromFile : " + ret);
-            assert (ret);
-        } catch (Exception e) {
-            log.info("catch exception : " + e.getMessage());
-        }
-        Thread.sleep(1000 * 5);
-        String res = client.callCypher("MATCH (n:Person) RETURN COUNT(n)", "default", 1000);
-        log.info("MATCH (n) RETURN COUNT(n) : " + res);
-        JSONObject jsonObject = (JSONObject)JSONObject.parseArray(res).get(0);
-        assert (jsonObject.containsKey("COUNT(n)"));
-        assert (jsonObject.getIntValue("COUNT(n)") == 13);
-
-        res = client.callCypher("match(n)-[r]->(m) return count(r)", "default", 1000);
-
-        jsonObject = (JSONObject)JSONObject.parseArray(res).get(0);
-        log.info("match(n)-[r]->(m) return count(r) : " + res);
-        assert (jsonObject.containsKey("count(r)"));
-        assert (jsonObject.getIntValue("count(r)") == 28);
+        TuGraphDbRpcClientUtil.importDataFromFile(log, client, true);
     }
 
     public static void buildProcedure(String pluginName, String pluginPath) {
