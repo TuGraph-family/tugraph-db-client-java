@@ -236,7 +236,7 @@ public class TuGraphDbRpcClient {
                     .stream()
                     .anyMatch(x -> query
                             .contains(x.getName()) && x.isReadOnly())
-                    || userDefinedProcedures
+                    && userDefinedProcedures
                     .stream()
                     .anyMatch(x -> query.contains(x.getDesc().getName())
                             && x.getGraphName().equals(graphName)
