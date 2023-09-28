@@ -70,7 +70,7 @@ public class TuGraphDbHaRpcClientTestCase {
         log.info("testListProcedures : " + result);
         JSONArray array = JSONObject.parseArray(result);
         assert array.size()==2;
-        result = client.listProcedures("CPP", "default", host+":29093");
+        result = client.listProcedures("CPP", "v1", "default", host+":29093");
         array = JSONObject.parseArray(result);
         assert array.size()==2;
     }
@@ -350,8 +350,10 @@ public class TuGraphDbHaRpcClientTestCase {
         } catch (TuGraphDbRpcException e) {
             log.info("Exception at " + e.GetErrorMethod() + " with errorCodeName: " + e.GetErrorCodeName() + " and error: " + e.GetError());
             log.info(e.getMessage());
+            throw e;
         } catch (Exception e2) {
             log.info(e2.getMessage());
+            throw e2;
         } finally {
             // stop leader and follower
             client.logout();

@@ -112,6 +112,7 @@ public class TuGraphDbRpcClientTest {
             } catch (TuGraphDbRpcException e) {
                 log.info("Exception at " + e.GetErrorMethod() + " with errorCodeName: " + e.GetErrorCodeName() + " and "
                         + "error: " + e.GetError());
+                throw e;
             }
             log.info("----------------testRpcClientLogout--------------------");
             client.logout();

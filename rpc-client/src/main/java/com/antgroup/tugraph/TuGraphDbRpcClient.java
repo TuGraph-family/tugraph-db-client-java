@@ -232,8 +232,12 @@ public class TuGraphDbRpcClient {
     }
 
     @Override
-    protected void finalize() throws Throwable {
-        logout();
+    protected void finalize(){
+        try {
+            logout();
+        } catch (Throwable e) {
+            log.info("RpcHAClient already logout!");
+        }
     }
 
     /**
@@ -854,8 +858,8 @@ public class TuGraphDbRpcClient {
         protected void finalize() {
             try {
                 logout();
-            } catch (Exception e) {
-                log.info(e.getClass().getName());
+            } catch (Throwable e) {
+                log.info("RpcClient already logout!");
             }
         }
     }
