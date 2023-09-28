@@ -123,8 +123,13 @@ public class TuGraphDbRpcClient {
 
     public String callProcedure(String procedureType, String procedureName, String param, double procedureTimeOut,
                              boolean inProcess, String graph) throws Exception {
+        return callProcedure(procedureType, procedureName, param, procedureTimeOut, inProcess, graph, false);
+    }
+
+    public String callProcedure(String procedureType, String procedureName, String param, double procedureTimeOut,
+                                boolean inProcess, String graph, boolean jsonFormat) throws Exception {
         if (clientType == ClientType.SINGLE_CONNECTION) {
-            return baseClient.callProcedure(procedureType, procedureName, param, procedureTimeOut, inProcess, graph);
+            return baseClient.callProcedure(procedureType, procedureName, param, procedureTimeOut, inProcess, graph, jsonFormat);
         } else {
             return doubleCheckQuery(()-> {
                 boolean readOnly = false;
@@ -135,22 +140,32 @@ public class TuGraphDbRpcClient {
                     }
                 }
                 return getClient(readOnly)
-                        .callProcedure(procedureType, procedureName, param, procedureTimeOut, inProcess, graph);
+                        .callProcedure(procedureType, procedureName, param, procedureTimeOut, inProcess, graph, jsonFormat);
             });
         }
     }
 
     public String callProcedure(String procedureType, String procedureName, String param, double procedureTimeOut,
                                 boolean inProcess, String graph, String url) throws Exception {
-        return doubleCheckQuery(()-> getClientByNode(url).callProcedure(procedureType, procedureName, param, procedureTimeOut, inProcess, graph));
+        return callProcedure(procedureType, procedureName, param, procedureTimeOut, inProcess, graph, false, url);
+    }
+
+    public String callProcedure(String procedureType, String procedureName, String param, double procedureTimeOut,
+                                boolean inProcess, String graph, boolean jsonFormat, String url) throws Exception {
+        return doubleCheckQuery(()-> getClientByNode(url).callProcedure(procedureType, procedureName, param, procedureTimeOut, inProcess, graph, jsonFormat));
     }
 
     public String callProcedureToLeader(String procedureType, String procedureName, String param, double procedureTimeOut,
                                 boolean inProcess, String graph) throws Exception {
+        return callProcedureToLeader(procedureType, procedureName, param, procedureTimeOut, inProcess, graph, false);
+    }
+
+    public String callProcedureToLeader(String procedureType, String procedureName, String param, double procedureTimeOut,
+                                        boolean inProcess, String graph, boolean jsonFormat) throws Exception {
         if (clientType == ClientType.SINGLE_CONNECTION) {
-            return baseClient.callProcedure(procedureType, procedureName, param, procedureTimeOut, inProcess, graph);
+            return baseClient.callProcedure(procedureType, procedureName, param, procedureTimeOut, inProcess, graph, jsonFormat);
         } else {
-            return doubleCheckQuery(()-> leaderClient.callProcedure(procedureType, procedureName, param, procedureTimeOut, inProcess, graph));
+            return doubleCheckQuery(()-> leaderClient.callProcedure(procedureType, procedureName, param, procedureTimeOut, inProcess, graph, jsonFormat));
         }
     }
 
@@ -228,14 +243,16 @@ public class TuGraphDbRpcClient {
         if (clientType != ClientType.INDIRECT_HA_CONNECTION){
             baseClient.logout();
         }
-        rpcClientPool.forEach(TuGraphSingleRpcClient::logout);
+        for (TuGraphSingleRpcClient rpcClient : rpcClientPool) {
+            rpcClient.logout();
+        }
     }
 
     @Override
     protected void finalize(){
         try {
             logout();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             log.info("RpcHAClient already logout!");
         }
     }
@@ -636,15 +653,23 @@ public class TuGraphDbRpcClient {
                                     boolean inProcess, String graph) {
             Lgraph.PluginRequest.PluginType type =
                     "CPP".equals(procedureType) ? Lgraph.PluginRequest.PluginType.CPP : Lgraph.PluginRequest.PluginType.PYTHON;
-            ByteString resp = callProcedure(type, procedureName, ByteString.copyFromUtf8(param), graph, procedureTimeOut, inProcess);
+            ByteString resp = callProcedure(type, procedureName, ByteString.copyFromUtf8(param), graph, procedureTimeOut, inProcess, false);
+            return resp.toStringUtf8();
+        }
+
+        public String callProcedure(String procedureType, String procedureName, String param, double procedureTimeOut,
+                                    boolean inProcess, String graph, boolean jsonFormat) {
+            Lgraph.PluginRequest.PluginType type =
+                    "CPP".equals(procedureType) ? Lgraph.PluginRequest.PluginType.CPP : Lgraph.PluginRequest.PluginType.PYTHON;
+            ByteString resp = callProcedure(type, procedureName, ByteString.copyFromUtf8(param), graph, procedureTimeOut, inProcess, jsonFormat);
             return resp.toStringUtf8();
         }
 
         public ByteString callProcedure(Lgraph.PluginRequest.PluginType type, String name, ByteString param,
-                                        String graph, double timeout, boolean inProcess) {
+                                        String graph, double timeout, boolean inProcess, boolean jsonFormat) {
             Lgraph.CallPluginRequest vreq =
                     Lgraph.CallPluginRequest.newBuilder().setName(name).setParam(param).setTimeout(timeout)
-                            .setInProcess(inProcess).build();
+                            .setInProcess(inProcess).setResultInJsonFormat(jsonFormat).build();
             Lgraph.PluginRequest req =
                     Lgraph.PluginRequest.newBuilder().setType(type).setCallPluginRequest(vreq).setGraph(graph).build();
             Lgraph.LGraphRequest request =
@@ -653,7 +678,11 @@ public class TuGraphDbRpcClient {
             if (response.getErrorCode().getNumber() != Lgraph.LGraphResponse.ErrorCode.SUCCESS_VALUE) {
                 throw new TuGraphDbRpcException(response.getErrorCode(), response.getError(), "CallProcedure");
             }
-            return response.getPluginResponse().getCallPluginResponse().getReply();
+            if (jsonFormat) {
+                return response.getPluginResponse().getCallPluginResponse().getJsonResultBytes();
+            } else {
+                return response.getPluginResponse().getCallPluginResponse().getReply();
+            }
         }
 
         public String listProcedures(String procedureType, String version, String graph) {
@@ -841,7 +870,7 @@ public class TuGraphDbRpcClient {
         }
 
         // When the scope of the client object ends, the token is automatically deleted, making the token invalid.
-        public void logout() {
+        public void logout() throws Exception {
             Lgraph.LogoutRequest logoutReq = Lgraph.LogoutRequest.newBuilder().setToken(this.token).build();
             Lgraph.AuthRequest authReq = Lgraph.AuthRequest.newBuilder().setLogout(logoutReq).build();
             Lgraph.AclRequest req = Lgraph.AclRequest.newBuilder().setAuthRequest(authReq).build();
@@ -858,7 +887,7 @@ public class TuGraphDbRpcClient {
         protected void finalize() {
             try {
                 logout();
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 log.info("RpcClient already logout!");
             }
         }
