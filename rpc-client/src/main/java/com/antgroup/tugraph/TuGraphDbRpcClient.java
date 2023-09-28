@@ -231,7 +231,7 @@ public class TuGraphDbRpcClient {
     private boolean isReadQuery(Lgraph.ProtoGraphQueryType type, String query, String graphName) {
         GraphQueryConstant graphQueryConstant = new GraphQueryConstant();
 
-        if (query.contains(GraphQueryConstant.CALL)) {
+        if (query.toUpperCase().contains(GraphQueryConstant.CALL)) {
             return builtInProcedures
                     .stream()
                     .anyMatch(x -> query
