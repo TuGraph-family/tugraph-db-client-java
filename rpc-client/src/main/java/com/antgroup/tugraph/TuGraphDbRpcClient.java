@@ -85,12 +85,24 @@ public class TuGraphDbRpcClient {
         if (clientType == ClientType.SINGLE_CONNECTION){
             return baseClient.callCypher(cypher, graph, timeout);
         } else {
-            return doubleCheckQuery(()-> getClient(cypher, graph).callCypher(cypher, graph, timeout));
+            return doubleCheckQuery(()-> getClient(Lgraph.ProtoGraphQueryType.CYPHER, cypher, graph).callCypher(cypher, graph, timeout));
+        }
+    }
+
+    public String callGql(String gql, String graph, double timeout) throws Exception {
+        if (clientType == ClientType.SINGLE_CONNECTION){
+            return baseClient.callGql(gql, graph, timeout);
+        } else {
+            return doubleCheckQuery(()-> getClient(Lgraph.ProtoGraphQueryType.GQL, gql, graph).callGql(gql, graph, timeout));
         }
     }
 
     public String callCypher(String cypher, String graph, double timeout, String url) throws Exception {
         return doubleCheckQuery(()-> getClientByNode(url).callCypher(cypher, graph, timeout));
+    }
+
+    public String callGql(String gql, String graph, double timeout, String url) throws Exception {
+        return doubleCheckQuery(()-> getClientByNode(url).callCypher(gql, graph, timeout));
     }
 
     public String callProcedure(String procedureType, String procedureName, String param, double procedureTimeOut,
@@ -216,28 +228,36 @@ public class TuGraphDbRpcClient {
     }
 
 
-    private boolean isReadCypher(String cypher, String graphName) {
-        CypherConstant cypherConstant = new CypherConstant();
+    private boolean isReadQuery(Lgraph.ProtoGraphQueryType type, String query, String graphName) {
+        GraphQueryConstant graphQueryConstant = new GraphQueryConstant();
 
-        if (cypher.contains(CypherConstant.CALL)) {
+        if (query.contains(GraphQueryConstant.CALL)) {
             return builtInProcedures
                     .stream()
-                    .anyMatch(x -> cypher
+                    .anyMatch(x -> query
                             .contains(x.getName()) && x.isReadOnly())
                     || userDefinedProcedures
                     .stream()
-                    .anyMatch(x -> cypher.contains(x.getDesc().getName())
+                    .anyMatch(x -> query.contains(x.getDesc().getName())
                             && x.getGraphName().equals(graphName)
                             && x.getDesc().isReadOnly());
         }
-        return cypherConstant.getAllCypherType()
-                .stream()
-                .noneMatch(x -> cypher
-                        .toLowerCase()
-                        .contains(x));
+        if (type == Lgraph.ProtoGraphQueryType.CYPHER) {
+            return graphQueryConstant.getAllCypherType()
+                    .stream()
+                    .noneMatch(x -> query
+                            .toLowerCase()
+                            .contains(x));
+        } else {
+            return graphQueryConstant.getAllGqlType()
+                    .stream()
+                    .noneMatch(x -> query
+                            .toLowerCase()
+                            .contains(x));
+        }
     }
-    private TuGraphSingleRpcClient getClient(String cypher, String graph) throws Exception {
-        return getClient(isReadCypher(cypher, graph));
+    private TuGraphSingleRpcClient getClient(Lgraph.ProtoGraphQueryType type, String query, String graph) throws Exception {
+        return getClient(isReadQuery(type, query, graph));
     }
 
     private TuGraphSingleRpcClient getClient(boolean isReadQuery) throws Exception {
