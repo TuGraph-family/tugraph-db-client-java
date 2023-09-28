@@ -17,7 +17,7 @@ public class TuGraphDbHaRpcClientTestCase {
     }
 
     public static void importDataFromContent(TuGraphDbRpcClient client) throws Exception {
-        TuGraphDbRpcClientUtil.importSchemaFromContent(log, client, true);
+        TuGraphDbRpcClientUtil.importDataFromContent(log, client, true);
     }
 
     public static void importSchemaFromFile(TuGraphDbRpcClient client) throws Exception {
@@ -84,6 +84,26 @@ public class TuGraphDbHaRpcClientTestCase {
         log.info("testListProcedures : " + result);
         JSONArray array = JSONObject.parseArray(result);
         assert array.size()==1;
+    }
+
+    public static void testQueryToLeader(TuGraphDbRpcClient client) throws Exception {
+        log.info("----------------testQueryToLeader--------------------");
+        client.callCypher("CALL db.dropDB()", "default", 10);
+        boolean ret = client.importSchemaFromContent(TuGraphDbRpcClientUtil.ImportSchema, "default", 1000)
+                && client.importDataFromContent(TuGraphDbRpcClientUtil.ImportDataPersonDesc, TuGraphDbRpcClientUtil.ImportDataPerson, ",", true, 16, "default", 1000);
+        assert (ret);
+        String res = client.callCypherToLeader("MATCH (n) RETURN COUNT(n)", "default", 10);
+        JSONArray jsonArray = JSONArray.parseArray(res);
+        assert (jsonArray.size() == 1);
+        JSONObject jsonObject = jsonArray.getJSONObject(0);
+        assert (jsonObject.containsKey("COUNT(n)"));
+        assert (jsonObject.getIntValue("COUNT(n)") == 13);
+
+        ret = client.loadProcedure("./sortstr.so", "CPP", "sortstr", "SO", "test sortstr", true, "v1",  "default");
+        assert ret;
+        String result = client.callProcedure("CPP", "sortstr", "gecfb", 1000, false, "default");
+        log.info("testCallProcedure : " + result);
+        assert ("bcefg".equals(result));
     }
 
     public static void executive(String stmt) {
@@ -241,6 +261,7 @@ public class TuGraphDbHaRpcClientTestCase {
             callProcedure(client);
             listProcedures(client);
             deleteProcedure(client);
+            testQueryToLeader(client);
             importSchemaFromFile(client);
             importDataFromFile(client);
 

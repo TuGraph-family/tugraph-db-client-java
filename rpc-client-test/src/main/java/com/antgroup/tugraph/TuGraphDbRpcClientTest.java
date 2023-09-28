@@ -1,12 +1,10 @@
 package com.antgroup.tugraph;
 
 import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 public class TuGraphDbRpcClientTest {
     static Logger log = LoggerFactory.getLogger(TuGraphDbRpcClientTest.class);
@@ -69,7 +67,7 @@ public class TuGraphDbRpcClientTest {
     }
 
     public static void importDataFromContent(TuGraphDbRpcClient client) throws Exception {
-        TuGraphDbRpcClientUtil.importSchemaFromContent(log, client, false);
+        TuGraphDbRpcClientUtil.importDataFromContent(log, client, false);
     }
 
     public static void importSchemaFromFile(TuGraphDbRpcClient client) throws Exception {

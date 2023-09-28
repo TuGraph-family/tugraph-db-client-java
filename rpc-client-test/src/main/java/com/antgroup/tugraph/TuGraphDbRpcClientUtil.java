@@ -183,7 +183,7 @@ public interface TuGraphDbRpcClientUtil {
         }
 
         String res = client.callCypher("MATCH (n:Person) RETURN COUNT(n)", "default", 1000);
-        log.info("MATCH (n) RETURN COUNT(n) : " + res);
+        log.info("MATCH (n:Person) RETURN COUNT(n) : " + res);
         JSONArray jsonArray = JSONArray.parseArray(res);
         assert (jsonArray.size() == 1);
         JSONObject jsonObject = jsonArray.getJSONObject(0);
