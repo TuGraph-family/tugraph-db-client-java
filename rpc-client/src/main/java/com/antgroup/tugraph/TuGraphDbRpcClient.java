@@ -52,7 +52,7 @@ public class TuGraphDbRpcClient {
 
     // Attributes common to all types of clients
     private TuGraphSingleRpcClient leaderClient;
-    private final List<TuGraphSingleRpcClient> rpcClientPool = new CopyOnWriteArrayList<>();
+    private List<TuGraphSingleRpcClient> rpcClientPool = new CopyOnWriteArrayList<>();
     private List<UserDefinedProcedure> userDefinedProcedures = new CopyOnWriteArrayList<>();
     private List<BuiltInProcedure> builtInProcedures = new CopyOnWriteArrayList<>();
 
@@ -219,12 +219,12 @@ public class TuGraphDbRpcClient {
     private boolean isReadCypher(String cypher, String graphName) {
         CypherConstant cypherConstant = new CypherConstant();
 
-        if (cypher.contains(CypherConstant.CALL)) {
+        if (cypher.toUpperCase().contains(CypherConstant.CALL)) {
             return builtInProcedures
                     .stream()
                     .anyMatch(x -> cypher
                             .contains(x.getName()) && x.isReadOnly())
-                    || userDefinedProcedures
+                    && userDefinedProcedures
                     .stream()
                     .anyMatch(x -> cypher.contains(x.getDesc().getName())
                             && x.getGraphName().equals(graphName)
@@ -266,27 +266,44 @@ public class TuGraphDbRpcClient {
     }
 
     private void refreshClientPool() {
-        rpcClientPool.clear();
         if (clientType == ClientType.DIRECT_HA_CONNECTION) {
+            Map<String, TuGraphSingleRpcClient> urlClientMap = new HashMap<>();
+            rpcClientPool.forEach(x -> urlClientMap.put(x.getUrl().split("//")[1], x));
+            List<TuGraphSingleRpcClient> innerClientPool = new CopyOnWriteArrayList<>();
             String result = baseClient.callCypher("CALL dbms.ha.clusterInfo()", "default", 10);
             ClusterInfo clusterInfo = JSON.parseObject(JSON.parseArray(result).get(0).toString(), new TypeReference<ClusterInfo>(){});
             List<RaftState> raftStates = clusterInfo.getClusterInfo();
             raftStates.forEach(x -> {
-                TuGraphSingleRpcClient rpcClient = new TuGraphSingleRpcClient("list://" + x.getRpcAddress(), user, password);
-                rpcClientPool.add(rpcClient);
+                if (urlClientMap.containsKey(x.getRpcAddress())) {
+                    innerClientPool.add(urlClientMap.get(x.getRpcAddress()));
+                } else {
+                    TuGraphSingleRpcClient rpcClient = new TuGraphSingleRpcClient("list://" + x.getRpcAddress(), user, password);
+                    innerClientPool.add(rpcClient);
+                }
                 if (x.getState().equals(RaftState.StateConstant.MASTER)) {
-                    leaderClient = rpcClient;
+                    leaderClient = innerClientPool.get(innerClientPool.size() - 1);
                 }
             });
+            rpcClientPool = innerClientPool;
         } else {
-            for (String url : urls) {
-                TuGraphSingleRpcClient rpcClient = new TuGraphSingleRpcClient("list://" + url, user, password);
-                String result = rpcClient.callCypher("CALL dbms.ha.clusterInfo()", "default", 10);
-                ClusterInfo clusterInfo = JSON.parseObject(JSON.parseArray(result).get(0).toString(), new TypeReference<ClusterInfo>(){});
-                if (clusterInfo.isMaster()) {
-                    leaderClient = rpcClient;
+            if (rpcClientPool.size() == 0) {
+                for (String url : urls) {
+                    TuGraphSingleRpcClient rpcClient = new TuGraphSingleRpcClient("list://" + url, user, password);
+                    String result = rpcClient.callCypher("CALL dbms.ha.clusterInfo()", "default", 10);
+                    ClusterInfo clusterInfo = JSON.parseObject(JSON.parseArray(result).get(0).toString(), new TypeReference<ClusterInfo>(){});
+                    if (clusterInfo.isMaster()) {
+                        leaderClient = rpcClient;
+                    }
+                    rpcClientPool.add(rpcClient);
                 }
-                rpcClientPool.add(rpcClient);
+            } else {
+                for (TuGraphSingleRpcClient rpcClient : rpcClientPool) {
+                    String result = rpcClient.callCypher("CALL dbms.ha.clusterInfo()", "default", 10);
+                    ClusterInfo clusterInfo = JSON.parseObject(JSON.parseArray(result).get(0).toString(), new TypeReference<ClusterInfo>(){});
+                    if (clusterInfo.isMaster()) {
+                        leaderClient = rpcClient;
+                    }
+                }
             }
         }
     }
