@@ -23,7 +23,9 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @Author: haoyongdong.hyd@antgroup.com
@@ -52,9 +54,11 @@ public class TuGraphDbRpcClient {
 
     // Attributes common to all types of clients
     private TuGraphSingleRpcClient leaderClient;
-    private List<TuGraphSingleRpcClient> rpcClientPool = new CopyOnWriteArrayList<>();
-    private List<UserDefinedProcedure> userDefinedProcedures = new CopyOnWriteArrayList<>();
-    private List<BuiltInProcedure> builtInProcedures = new CopyOnWriteArrayList<>();
+    private Deque<TuGraphSingleRpcClient> rpcClientPool = new ConcurrentLinkedDeque<>();
+    private Deque<UserDefinedProcedure> userDefinedProcedures = new ConcurrentLinkedDeque<>();
+    private Deque<BuiltInProcedure> builtInProcedures = new ConcurrentLinkedDeque<>();
+
+    private Lock clientLock = new ReentrantLock();
 
     public TuGraphDbRpcClient(String url, String user, String password) throws Exception{
         ClientType type;
@@ -245,9 +249,13 @@ public class TuGraphDbRpcClient {
             if (rpcClientPool.size() == 0){
                 throw new Exception("all instance is down, refuse req!");
             }
-            TuGraphSingleRpcClient rpcClient = rpcClientPool.get(rpcClientPool.size() - 1);
-            loadBalance();
-            return rpcClient;
+            clientLock.lock();
+            try {
+                loadBalance();
+                return rpcClientPool.getLast();
+            } finally {
+                clientLock.unlock();
+            }
         } else {
             if (leaderClient == null){
                 throw new Exception("master instance is down, refuse req!");
@@ -269,7 +277,7 @@ public class TuGraphDbRpcClient {
         if (clientType == ClientType.DIRECT_HA_CONNECTION) {
             Map<String, TuGraphSingleRpcClient> urlClientMap = new HashMap<>();
             rpcClientPool.forEach(x -> urlClientMap.put(x.getUrl().split("//")[1], x));
-            List<TuGraphSingleRpcClient> innerClientPool = new CopyOnWriteArrayList<>();
+            Deque<TuGraphSingleRpcClient> innerClientPool = new ConcurrentLinkedDeque<>();
             String result = baseClient.callCypher("CALL dbms.ha.clusterInfo()", "default", 10);
             ClusterInfo clusterInfo = JSON.parseObject(JSON.parseArray(result).get(0).toString(), new TypeReference<ClusterInfo>(){});
             List<RaftState> raftStates = clusterInfo.getClusterInfo();
@@ -281,7 +289,7 @@ public class TuGraphDbRpcClient {
                     innerClientPool.add(rpcClient);
                 }
                 if (x.getState().equals(RaftState.StateConstant.MASTER)) {
-                    leaderClient = innerClientPool.get(innerClientPool.size() - 1);
+                    leaderClient = innerClientPool.getLast();
                 }
             });
             rpcClientPool = innerClientPool;
@@ -313,17 +321,17 @@ public class TuGraphDbRpcClient {
      */
     private void refreshBuiltInProcedure() throws Exception {
         String result = getClient(true).callCypher("CALL dbms.procedures()", "default", 10);
-        builtInProcedures = JSON.parseObject(result, new TypeReference<List<BuiltInProcedure>>(){});
+        builtInProcedures = JSON.parseObject(result, new TypeReference<Deque<BuiltInProcedure>>(){});
     }
 
     private void refreshUserDefinedProcedure() throws Exception {
         //CALL db.plugin.listUserPlugins()
         String result = getClient(true).callCypher("CALL db.plugin.listUserPlugins()", "default", 10);
-        userDefinedProcedures = JSON.parseObject(result, new TypeReference<List<UserDefinedProcedure>>(){});
+        userDefinedProcedures = JSON.parseObject(result, new TypeReference<Deque<UserDefinedProcedure>>(){});
     }
 
     private void loadBalance() {
-        rpcClientPool.add(rpcClientPool.remove(0));
+        rpcClientPool.add(rpcClientPool.remove());
     }
 
     interface QueryInterface<E> {
