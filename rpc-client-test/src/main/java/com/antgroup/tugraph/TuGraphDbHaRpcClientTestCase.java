@@ -77,7 +77,9 @@ public class TuGraphDbHaRpcClientTestCase {
         String result2 = client.listProcedures("CPP", "v1", "default", host+":29093");
         String result3 = client.listProcedures("CPP", "v1", "default", host+":29094");
         JSONArray array2 = JSONObject.parseArray(result2), array3 = JSONObject.parseArray(result3);
-        assert array2.size()==2 || array3.size()==2;
+        log.info("testListProcedures2 : " + result2);
+        log.info("testListProcedures3 : " + result3);
+        assert (array2.size()==2 || array3.size()==2);
     }
 
     public static void deleteProcedure(TuGraphDbRpcClient client) throws Exception {
