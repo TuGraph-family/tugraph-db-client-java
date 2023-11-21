@@ -74,13 +74,10 @@ public class TuGraphDbHaRpcClientTestCase {
         log.info("testListProcedures : " + result);
         JSONArray array = JSONObject.parseArray(result);
         assert array.size()==2;
-        try {
-            result = client.listProcedures("CPP", "v1", "default", host+":29093");
-        } catch (Exception e) {
-            result = client.listProcedures("CPP", "v1", "default", host+":29094");
-        }
-        array = JSONObject.parseArray(result);
-        assert array.size()==2;
+        String result2 = client.listProcedures("CPP", "v1", "default", host+":29093");
+        String result3 = client.listProcedures("CPP", "v1", "default", host+":29094");
+        JSONArray array2 = JSONObject.parseArray(result2), array3 = JSONObject.parseArray(result3);
+        assert array2.size()==2 || array3.size()==2;
     }
 
     public static void deleteProcedure(TuGraphDbRpcClient client) throws Exception {
@@ -274,16 +271,13 @@ public class TuGraphDbHaRpcClientTestCase {
             importDataFromFile(client);
 
             // query after importing data
+            Thread.sleep(10000);
             String res2 = client.callCypher("MATCH (n:Person) RETURN count(n)", "default", 10);
             JSONObject jsonObject1 = (JSONObject)JSONObject.parseArray(res2).get(0);
             assert (jsonObject1.containsKey("count(n)"));
             assert (jsonObject1.getIntValue("count(n)") == 13);
 
-            try {
-                res2 = client.callCypher("MATCH (n:Person) RETURN count(n)", "default", 10, host+":29094");
-            } catch (Exception e) {
-                res2 = client.callCypher("MATCH (n:Person) RETURN count(n)", "default", 10, host+":29093");
-            }
+            res2 = client.callCypher("MATCH (n:Person) RETURN count(n)", "default", 10, host+":29094");
             jsonObject1 = (JSONObject)JSONObject.parseArray(res2).get(0);
             assert (jsonObject1.containsKey("count(n)"));
             assert (jsonObject1.getIntValue("count(n)") == 13);
