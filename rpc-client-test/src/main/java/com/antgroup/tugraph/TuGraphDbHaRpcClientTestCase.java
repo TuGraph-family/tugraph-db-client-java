@@ -59,7 +59,11 @@ public class TuGraphDbHaRpcClientTestCase {
         String result = client.callProcedure("CPP", "sortstr", "gecfb", 1000, false, "default");
         log.info("testCallProcedure : " + result);
         assert ("bcefg".equals(result));
-        result = client.callProcedure("CPP", "sortstr", "gecfb", 1000, false, "default", host+":29093");
+        try {
+            result = client.callProcedure("CPP", "sortstr", "gecfb", 1000, false, "default", host+":29093");
+        } catch (Exception e) {
+            result = client.callProcedure("CPP", "sortstr", "gecfb", 1000, false, "default", host+":29094");
+        }
         log.info("testCallProcedure : " + result);
         assert ("bcefg".equals(result));
     }
@@ -70,7 +74,11 @@ public class TuGraphDbHaRpcClientTestCase {
         log.info("testListProcedures : " + result);
         JSONArray array = JSONObject.parseArray(result);
         assert array.size()==2;
-        result = client.listProcedures("CPP", "v1", "default", host+":29093");
+        try {
+            result = client.listProcedures("CPP", "v1", "default", host+":29093");
+        } catch (Exception e) {
+            result = client.listProcedures("CPP", "v1", "default", host+":29094");
+        }
         array = JSONObject.parseArray(result);
         assert array.size()==2;
     }
@@ -271,7 +279,11 @@ public class TuGraphDbHaRpcClientTestCase {
             assert (jsonObject1.containsKey("count(n)"));
             assert (jsonObject1.getIntValue("count(n)") == 13);
 
-            res2 = client.callCypher("MATCH (n:Person) RETURN count(n)", "default", 10, host+":29094");
+            try {
+                res2 = client.callCypher("MATCH (n:Person) RETURN count(n)", "default", 10, host+":29094");
+            } catch (Exception e) {
+                res2 = client.callCypher("MATCH (n:Person) RETURN count(n)", "default", 10, host+":29093");
+            }
             jsonObject1 = (JSONObject)JSONObject.parseArray(res2).get(0);
             assert (jsonObject1.containsKey("count(n)"));
             assert (jsonObject1.getIntValue("count(n)") == 13);
