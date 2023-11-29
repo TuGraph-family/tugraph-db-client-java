@@ -74,6 +74,7 @@ public class TuGraphDbHaRpcClientTestCase {
         log.info("testListProcedures : " + result);
         JSONArray array = JSONObject.parseArray(result);
         assert array.size()==2;
+        Thread.sleep(3000);
         String result2 = client.listProcedures("CPP", "v1", "default", host+":29093");
         String result3 = client.listProcedures("CPP", "v1", "default", host+":29094");
         JSONArray array2 = JSONObject.parseArray(result2), array3 = JSONObject.parseArray(result3);
