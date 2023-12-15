@@ -28,6 +28,8 @@ public class RaftState {
         public final static String MASTER = "MASTER";
 
         public final static String FOLLOW = "FOLLOW";
+
+        public final static String WITNESS = "WITNESS";
     }
 
 }

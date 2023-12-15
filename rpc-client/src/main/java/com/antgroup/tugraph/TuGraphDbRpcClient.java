@@ -338,6 +338,8 @@ public class TuGraphDbRpcClient {
             ClusterInfo clusterInfo = JSON.parseObject(JSON.parseArray(result).get(0).toString(), new TypeReference<ClusterInfo>(){});
             List<RaftState> raftStates = clusterInfo.getClusterInfo();
             raftStates.forEach(x -> {
+                if (x.getState().equals(RaftState.StateConstant.WITNESS))
+                    return;
                 TuGraphSingleRpcClient rpcClient = new TuGraphSingleRpcClient("list://" + x.getRpcAddress(), user, password);
                 rpcClientPool.add(rpcClient);
                 if (x.getState().equals(RaftState.StateConstant.MASTER)) {
