@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class TuGraphDbRpcClientTest {
     static Logger log = LoggerFactory.getLogger(TuGraphDbRpcClientTest.class);
@@ -35,6 +36,16 @@ public class TuGraphDbRpcClientTest {
             result = client.loadProcedure("./scan_graph.so", "CPP", "scan_graph", "SO", "test scan_graph", true,
                     "v1", "default");
             log.info("loadProcedure : " + result);
+
+            String[] multi_files = {
+                    "../../test/test_procedures/multi_files.cpp",
+                    "../../test/test_procedures/multi_files.h",
+                    "../../test/test_procedures/multi_files_core.cpp"
+            };
+            result = client.loadProcedure(multi_files, "CPP", "multi_file", "CPP", "test sortstr", true,
+                    "v1", "default");
+            log.info("loadProcedure : " + result);
+            assert (result);
         } catch (IOException e) {
             log.info("catch IOException : " + e.getMessage());
         } catch (Exception e) {
@@ -48,7 +59,7 @@ public class TuGraphDbRpcClientTest {
             String result = client.listProcedures("CPP", "any", "default");
             log.info("testListProcedure: " + result);
             JSONArray jsonArray = JSONArray.parseArray(result);
-            assert (jsonArray.size() == 2);
+            assert (jsonArray.size() == 3);
         } catch (TuGraphDbRpcException e) {
             log.info("catch TuGraphDbRpcException : " + e.getMessage());
         }

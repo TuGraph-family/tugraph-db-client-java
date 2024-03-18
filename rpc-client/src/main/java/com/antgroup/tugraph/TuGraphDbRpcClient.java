@@ -185,6 +185,22 @@ public class TuGraphDbRpcClient {
         }
     }
 
+    public boolean loadProcedure(String[] sourceFiles, String procedureType, String procedureName, String codeType,
+                                 String procedureDescription, boolean readOnly, String version, String graph) throws Exception {
+        if (clientType == ClientType.SINGLE_CONNECTION) {
+            return baseClient.loadProcedure(sourceFiles, procedureType, procedureName, codeType, procedureDescription, readOnly, version, graph);
+        } else {
+            return doubleCheckQuery(()-> {
+                boolean succeed = leaderClient.loadProcedure(sourceFiles, procedureType, procedureName, codeType, procedureDescription, readOnly, version, graph);
+                //update procedure info
+                if (succeed) {
+                    refreshUserDefinedProcedure();
+                }
+                return succeed;
+            });
+        }
+    }
+
     public String listProcedures(String procedureType, String version, String graph) throws Exception {
         if (clientType == ClientType.SINGLE_CONNECTION) {
             return baseClient.listProcedures(procedureType, version, graph);
@@ -705,6 +721,15 @@ public class TuGraphDbRpcClient {
                                      String codeType,
                                      String procedureDescription, boolean readOnly,
                                      String version, String graph) throws IOException {
+            String[] sourceFiles = {sourceFile};
+            return loadProcedure(sourceFiles, procedureType, procedureName, codeType, procedureDescription, readOnly, version, graph);
+        }
+
+        public boolean loadProcedure(String[] sourceFiles,
+                                     String procedureType, String procedureName,
+                                     String codeType,
+                                     String procedureDescription, boolean readOnly,
+                                     String version, String graph) throws IOException {
             Lgraph.PluginRequest.PluginType type =
                     "CPP".equals(procedureType) ? Lgraph.PluginRequest.PluginType.CPP : Lgraph.PluginRequest.PluginType.PYTHON;
             Lgraph.LoadPluginRequest.CodeType cType =
@@ -712,10 +737,19 @@ public class TuGraphDbRpcClient {
                             "PY".equals(codeType) ? Lgraph.LoadPluginRequest.CodeType.PY :
                                     "CPP".equals(codeType) ? Lgraph.LoadPluginRequest.CodeType.CPP :
                                             Lgraph.LoadPluginRequest.CodeType.ZIP;
-            ByteString content = ByteString.copyFrom(Objects.requireNonNull(binaryFileReader(sourceFile)));
+            List<ByteString> contents = new ArrayList<ByteString>();
+            List<String> filenames = new ArrayList<String>();
+            for (String sourceFile : sourceFiles) {
+                ByteString content = ByteString.copyFrom(Objects.requireNonNull(binaryFileReader(sourceFile)));
+                contents.add(content);
+                String[] files = sourceFile.split("/");
+                String fn = files[files.length - 1];
+                filenames.add(fn);
+            }
             Lgraph.LoadPluginRequest lpRequest =
                     Lgraph.LoadPluginRequest.newBuilder().setName(procedureName).setDesc(procedureDescription)
-                            .setReadOnly(readOnly).setCode(content).setCodeType(cType).build();
+                            .setReadOnly(readOnly).setCodeType(cType)
+                            .addAllCode(contents).addAllFileName(filenames).build();
             Lgraph.PluginRequest req =
                     Lgraph.PluginRequest.newBuilder().setType(type).setLoadPluginRequest(lpRequest).setGraph(graph).setVersion(version).build();
             Lgraph.LGraphRequest request =
