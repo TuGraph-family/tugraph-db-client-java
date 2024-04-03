@@ -257,8 +257,11 @@ public class TuGraphDbHaRpcClientTestCase {
 
 
             String res1 = client.callCypher("MATCH (n) RETURN count(n)", "default", 10);
-            JSONArray jsonArray = JSONObject.parseArray(res1);
-            assert (jsonArray.size()==0);
+            JSONArray jsonArray = JSONArray.parseArray(res1);
+            assert (jsonArray.size() == 1);
+            JSONObject jsonObject = jsonArray.getJSONObject(0);
+            assert (jsonObject.containsKey("COUNT(n)"));
+            assert (jsonObject.getIntValue("COUNT(n)") == 0);
 
 
             importSchemaFromContent(client);
