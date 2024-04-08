@@ -256,7 +256,7 @@ public class TuGraphDbHaRpcClientTestCase {
             log.info(getRestPortByKey("MASTER", client));
 
 
-            String res1 = client.callCypher("MATCH (n) RETURN count(n)", "default", 10);
+            String res1 = client.callCypher("MATCH (n) RETURN COUNT(n)", "default", 10);
             JSONArray jsonArray = JSONArray.parseArray(res1);
             assert (jsonArray.size() == 1);
             JSONObject jsonObject = jsonArray.getJSONObject(0);
