@@ -16,6 +16,8 @@ public class RaftState {
     private String rpcAddress;
     @JSONField(name = "state")
     private String state;
+    @JSONField(name = "ha_role")
+    private String role;
 
     public static class StateConstant {
 
