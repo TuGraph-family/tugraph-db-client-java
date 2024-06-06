@@ -126,7 +126,7 @@ public interface TuGraphDbRpcClientUtil {
         JSONObject jsonObject = jsonArray.getJSONObject(0);
         assert (jsonObject.containsKey("COUNT(n)"));
         assert (jsonObject.getIntValue("COUNT(n)") == 13);
-        res = client.callCypher("MATCH (n) RETURN COUNT(n)", "default", 10, false);
+        res = client.callCypher("MATCH (n) RETURN n,n.name limit 3", "default", 10, false);
         log.info("MATCH (n) RETURN COUNT(n) : " + res);
     }
 
