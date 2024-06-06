@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 public class TuGraphDbRpcClientTest {
     static Logger log = LoggerFactory.getLogger(TuGraphDbRpcClientTest.class);
@@ -15,11 +14,13 @@ public class TuGraphDbRpcClientTest {
         log.info("----------------testDeleteProcedure--------------------");
         try {
             boolean result = client.deleteProcedure("CPP", "sortstr", "default");
-            log.info("deleteProcedure : " + result);
+            log.info("deleteProcedure sortstr : " + result);
             assert (result);
             // should throw TuGraphDbRpcException
             result = client.deleteProcedure("CPP", "scan_graph", "default");
-            log.info("loadProcedure : " + result);
+            log.info("deleteProcedure scan_graph : " + result);
+            result = client.deleteProcedure("CPP", "multi_file", "default");
+            log.info("deleteProcedure multi_file : " + result);
         } catch (Exception e) {
             log.info("catch Exception : " + e.getMessage());
         }

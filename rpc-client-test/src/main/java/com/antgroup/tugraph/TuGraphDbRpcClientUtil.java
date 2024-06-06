@@ -126,6 +126,8 @@ public interface TuGraphDbRpcClientUtil {
         JSONObject jsonObject = jsonArray.getJSONObject(0);
         assert (jsonObject.containsKey("COUNT(n)"));
         assert (jsonObject.getIntValue("COUNT(n)") == 13);
+        res = client.callCypher("MATCH (n) RETURN n,n.name LIMIT 3", "default", 10, true);
+        log.info("MATCH (n) RETURN n,n.name LIMIT 3 : " + res);
     }
 
     static void importSchemaFromFile(Logger log, TuGraphDbRpcClient client, boolean isHa) throws Exception {
@@ -190,7 +192,7 @@ public interface TuGraphDbRpcClientUtil {
         assert (jsonObject.containsKey("COUNT(n)"));
         assert (jsonObject.getIntValue("COUNT(n)") == 13);
 
-        res = client.callCypher("match(n) -[r]->(m) return count(r)", "default", 1000);
+        res = client.callCypher("match (n)-[r]->(m) return count(r)", "default", 1000);
         log.info("match(n) -[r]->(m) return count(r) : " + res);
         jsonArray = JSONArray.parseArray(res);
         assert (jsonArray.size() == 1);
