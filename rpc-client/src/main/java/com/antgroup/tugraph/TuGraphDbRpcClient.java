@@ -11,6 +11,7 @@ import com.baidu.brpc.client.RpcClientOptions;
 import com.baidu.brpc.client.loadbalance.LoadBalanceStrategy;
 import com.baidu.brpc.protocol.Options;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lgraph.Lgraph;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -24,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import com.google.protobuf.util.JsonFormat;
 
 /**
  * @Author: haoyongdong.hyd@antgroup.com
@@ -387,7 +389,7 @@ public class TuGraphDbRpcClient {
         throw new Exception("do not exit " + ipAndPort +" client");
     }
 
-    private void refreshClientPool() {
+    private void refreshClientPool() throws InvalidProtocolBufferException {
         rpcClientPool.clear();
         if (clientType == ClientType.DIRECT_HA_CONNECTION) {
             String result = baseClient.callCypher("CALL dbms.ha.clusterInfo()", "default", 10);
@@ -483,7 +485,7 @@ public class TuGraphDbRpcClient {
             this.url = url;
         }
 
-        private String handleGraphQueryRequest(Lgraph.ProtoGraphQueryType type, String query, String graph, double timeout, boolean jsonFormat) {
+        private String handleGraphQueryRequest(Lgraph.ProtoGraphQueryType type, String query, String graph, double timeout, boolean jsonFormat) throws InvalidProtocolBufferException {
             Lgraph.GraphQueryRequest queryRequest =
                     Lgraph.GraphQueryRequest.newBuilder().setType(type).setQuery(query).setResultInJsonFormat(jsonFormat)
                             .setGraph(graph).setTimeout(timeout).build();
@@ -498,14 +500,14 @@ public class TuGraphDbRpcClient {
             if (jsonFormat)
                 return response.getGraphQueryResponse().getJsonResult();
             else
-                return response.getGraphQueryResponse().getBinaryResult().toString();
+                return JsonFormat.printer().print(response.getGraphQueryResponse().getBinaryResult());
         }
 
-        private String handleCypherRequest(String query, String graph, double timeout, boolean jsonFormat) {
+        private String handleCypherRequest(String query, String graph, double timeout, boolean jsonFormat) throws InvalidProtocolBufferException {
             return handleGraphQueryRequest(Lgraph.ProtoGraphQueryType.CYPHER, query, graph, timeout, jsonFormat);
         }
 
-        private String handleGqlRequest(String query, String graph, double timeout, boolean jsonFormat) {
+        private String handleGqlRequest(String query, String graph, double timeout, boolean jsonFormat) throws InvalidProtocolBufferException {
             return handleGraphQueryRequest(Lgraph.ProtoGraphQueryType.GQL, query, graph, timeout, jsonFormat);
         }
 
@@ -702,19 +704,19 @@ public class TuGraphDbRpcClient {
             return url;
         }
 
-        public String callCypher(String cypher, String graph, double timeout, boolean jsonFormat) {
+        public String callCypher(String cypher, String graph, double timeout, boolean jsonFormat) throws InvalidProtocolBufferException {
             return handleCypherRequest(cypher, graph, timeout, jsonFormat);
         }
 
-        public String callCypher(String cypher, String graph, double timeout) {
+        public String callCypher(String cypher, String graph, double timeout) throws InvalidProtocolBufferException {
             return handleCypherRequest(cypher, graph, timeout, true);
         }
 
-        public String callGql(String gql, String graph, double timeout, boolean jsonFormat) {
+        public String callGql(String gql, String graph, double timeout, boolean jsonFormat) throws InvalidProtocolBufferException {
             return handleGqlRequest(gql, graph, timeout, jsonFormat);
         }
 
-        public String callGql(String gql, String graph, double timeout) {
+        public String callGql(String gql, String graph, double timeout) throws InvalidProtocolBufferException {
             return handleGqlRequest(gql, graph, timeout, true);
         }
 
@@ -830,7 +832,7 @@ public class TuGraphDbRpcClient {
             return true;
         }
 
-        public boolean importSchemaFromContent(String schema, String graph, double timeout) throws InputException{
+        public boolean importSchemaFromContent(String schema, String graph, double timeout) throws InputException, InvalidProtocolBufferException {
             byte[] textByte = schema.getBytes(StandardCharsets.UTF_8);
             String schema64 = Base64.getEncoder().encodeToString(textByte);
             String sb = "CALL db.importor.schemaImportor('"
@@ -845,7 +847,7 @@ public class TuGraphDbRpcClient {
         }
 
         public boolean importDataFromContent(String desc, String data, String delimiter,
-                                             boolean continueOnError, int threadNums, String graph, double timeout) throws UnsupportedEncodingException {
+                                             boolean continueOnError, int threadNums, String graph, double timeout) throws InvalidProtocolBufferException {
             byte[] textByteDesc = desc.getBytes(StandardCharsets.UTF_8);
             byte[] textByteData = data.getBytes(StandardCharsets.UTF_8);
             String desc64 = Base64.getEncoder().encodeToString(textByteDesc);
