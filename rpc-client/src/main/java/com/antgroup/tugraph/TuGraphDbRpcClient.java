@@ -485,7 +485,7 @@ public class TuGraphDbRpcClient {
 
         private String handleGraphQueryRequest(Lgraph.ProtoGraphQueryType type, String query, String graph, double timeout, boolean withHeader) {
             Lgraph.GraphQueryRequest queryRequest =
-                    Lgraph.GraphQueryRequest.newBuilder().setType(type).setQuery(query).setResultInJsonFormat(withHeader)
+                    Lgraph.GraphQueryRequest.newBuilder().setType(type).setQuery(query).setResultInJsonFormat(!withHeader)
                             .setGraph(graph).setTimeout(timeout).build();
             Lgraph.LGraphRequest request =
                     Lgraph.LGraphRequest.newBuilder().setGraphQueryRequest(queryRequest).setToken(this.token)
@@ -495,7 +495,7 @@ public class TuGraphDbRpcClient {
                 throw new TuGraphDbRpcException(response.getErrorCode(), response.getError(), "handleGraphQueryRequest");
             }
             serverVersion = Math.max(response.getServerVersion(), serverVersion);
-            if (withHeader){
+            if (!withHeader){
                 return response.getGraphQueryResponse().getJsonResult();
             } else {
                 Lgraph.GraphQueryResult graphQueryResult = response.getGraphQueryResponse().getBinaryResult();
@@ -760,7 +760,7 @@ public class TuGraphDbRpcClient {
         }
 
         public String callCypher(String cypher, String graph, double timeout) {
-            return handleCypherRequest(cypher, graph, timeout, true);
+            return handleCypherRequest(cypher, graph, timeout, false);
         }
 
         public String callGql(String gql, String graph, double timeout, boolean withHeader) {
@@ -768,7 +768,7 @@ public class TuGraphDbRpcClient {
         }
 
         public String callGql(String gql, String graph, double timeout) {
-            return handleGqlRequest(gql, graph, timeout, true);
+            return handleGqlRequest(gql, graph, timeout, false);
         }
 
         public String callProcedure(String procedureType, String procedureName, String param, double procedureTimeOut,
