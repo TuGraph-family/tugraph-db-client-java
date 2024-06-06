@@ -510,7 +510,43 @@ public class TuGraphDbRpcClient {
                 ans.put("header", header);
                 for (Lgraph.ListOfProtoFieldData resultData : graphQueryResult.getResultList()) {
                     JSONArray resultItem = new JSONArray();
-                    resultItem.addAll(resultData.getValuesList());
+                    for (Lgraph.ProtoFieldData fieldData : resultData.getValuesList()) {
+                        switch (fieldData.getDataCase()) {
+                            case BOOLEAN:
+                                resultItem.add(fieldData.getBoolean());
+                                break;
+                            case INT8_:
+                                resultItem.add(fieldData.getInt8());
+                                break;
+                            case INT16_:
+                                resultItem.add(fieldData.getInt16());
+                                break;
+                            case INT32_:
+                                resultItem.add(fieldData.getInt32());
+                                break;
+                            case INT64_:
+                                resultItem.add(fieldData.getInt64());
+                                break;
+                            case SP:
+                                resultItem.add(fieldData.getSp());
+                                break;
+                            case DP:
+                                resultItem.add(fieldData.getDp());
+                                break;
+                            case DATE:
+                                resultItem.add(fieldData.getDate());
+                                break;
+                            case DATETIME:
+                                resultItem.add(fieldData.getDatetime());
+                                break;
+                            case STR:
+                                resultItem.add(fieldData.getStr());
+                                break;
+                            case BLOB:
+                                resultItem.add(fieldData.getBlob());
+                                break;
+                        }
+                    }
                     result.add(resultItem);
                 }
                 ans.put("result", result);
