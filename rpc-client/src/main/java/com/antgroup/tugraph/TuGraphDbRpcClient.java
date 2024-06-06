@@ -89,6 +89,14 @@ public class TuGraphDbRpcClient {
         }
     }
 
+    public String callCypher(String cypher, String graph, double timeout, boolean jsonFormat) throws Exception {
+        if (clientType == ClientType.SINGLE_CONNECTION){
+            return baseClient.callCypher(cypher, graph, timeout, jsonFormat);
+        } else {
+            return doubleCheckQuery(()-> getClient(Lgraph.ProtoGraphQueryType.CYPHER, cypher, graph).callCypher(cypher, graph, timeout, jsonFormat));
+        }
+    }
+
     public String callGql(String gql, String graph, double timeout) throws Exception {
         if (clientType == ClientType.SINGLE_CONNECTION){
             return baseClient.callGql(gql, graph, timeout);
@@ -97,12 +105,28 @@ public class TuGraphDbRpcClient {
         }
     }
 
+    public String callGql(String gql, String graph, double timeout, boolean jsonFormat) throws Exception {
+        if (clientType == ClientType.SINGLE_CONNECTION){
+            return baseClient.callGql(gql, graph, timeout, jsonFormat);
+        } else {
+            return doubleCheckQuery(()-> getClient(Lgraph.ProtoGraphQueryType.GQL, gql, graph).callGql(gql, graph, timeout, jsonFormat));
+        }
+    }
+
     public String callCypher(String cypher, String graph, double timeout, String url) throws Exception {
         return doubleCheckQuery(()-> getClientByNode(url).callCypher(cypher, graph, timeout));
     }
 
+    public String callCypher(String cypher, String graph, double timeout, String url, boolean jsonFormat) throws Exception {
+        return doubleCheckQuery(()-> getClientByNode(url).callCypher(cypher, graph, timeout, jsonFormat));
+    }
+
     public String callGql(String gql, String graph, double timeout, String url) throws Exception {
         return doubleCheckQuery(()-> getClientByNode(url).callGql(gql, graph, timeout));
+    }
+
+    public String callGql(String gql, String graph, double timeout, String url, boolean jsonFormat) throws Exception {
+        return doubleCheckQuery(()-> getClientByNode(url).callGql(gql, graph, timeout, jsonFormat));
     }
 
     public String callCypherToLeader(String cypher, String graph, double timeout) throws Exception {
@@ -113,11 +137,27 @@ public class TuGraphDbRpcClient {
         }
     }
 
+    public String callCypherToLeader(String cypher, String graph, double timeout, boolean jsonFormat) throws Exception {
+        if (clientType == ClientType.SINGLE_CONNECTION){
+            return baseClient.callCypher(cypher, graph, timeout, jsonFormat);
+        } else {
+            return doubleCheckQuery(()-> leaderClient.callCypher(cypher, graph, timeout, jsonFormat));
+        }
+    }
+
     public String callGqlToLeader(String gql, String graph, double timeout) throws Exception {
         if (clientType == ClientType.SINGLE_CONNECTION){
             return baseClient.callGql(gql, graph, timeout);
         } else {
             return doubleCheckQuery(()-> leaderClient.callGql(gql, graph, timeout));
+        }
+    }
+
+    public String callGqlToLeader(String gql, String graph, double timeout, boolean jsonFormat) throws Exception {
+        if (clientType == ClientType.SINGLE_CONNECTION){
+            return baseClient.callGql(gql, graph, timeout, jsonFormat);
+        } else {
+            return doubleCheckQuery(()-> leaderClient.callGql(gql, graph, timeout, jsonFormat));
         }
     }
 
@@ -443,9 +483,9 @@ public class TuGraphDbRpcClient {
             this.url = url;
         }
 
-        private String handleGraphQueryRequest(Lgraph.ProtoGraphQueryType type, String query, String graph, double timeout) {
+        private String handleGraphQueryRequest(Lgraph.ProtoGraphQueryType type, String query, String graph, double timeout, boolean jsonFormat) {
             Lgraph.GraphQueryRequest queryRequest =
-                    Lgraph.GraphQueryRequest.newBuilder().setType(type).setQuery(query).setResultInJsonFormat(true)
+                    Lgraph.GraphQueryRequest.newBuilder().setType(type).setQuery(query).setResultInJsonFormat(jsonFormat)
                             .setGraph(graph).setTimeout(timeout).build();
             Lgraph.LGraphRequest request =
                     Lgraph.LGraphRequest.newBuilder().setGraphQueryRequest(queryRequest).setToken(this.token)
@@ -455,15 +495,18 @@ public class TuGraphDbRpcClient {
                 throw new TuGraphDbRpcException(response.getErrorCode(), response.getError(), "handleGraphQueryRequest");
             }
             serverVersion = Math.max(response.getServerVersion(), serverVersion);
-            return response.getGraphQueryResponse().getJsonResult();
+            if (jsonFormat)
+                return response.getGraphQueryResponse().getJsonResult();
+            else
+                return response.getGraphQueryResponse().getBinaryResult().toString();
         }
 
-        private String handleCypherRequest(String query, String graph, double timeout) {
-            return handleGraphQueryRequest(Lgraph.ProtoGraphQueryType.CYPHER, query, graph, timeout);
+        private String handleCypherRequest(String query, String graph, double timeout, boolean jsonFormat) {
+            return handleGraphQueryRequest(Lgraph.ProtoGraphQueryType.CYPHER, query, graph, timeout, jsonFormat);
         }
 
-        private String handleGqlRequest(String query, String graph, double timeout) {
-            return handleGraphQueryRequest(Lgraph.ProtoGraphQueryType.GQL, query, graph, timeout);
+        private String handleGqlRequest(String query, String graph, double timeout, boolean jsonFormat) {
+            return handleGraphQueryRequest(Lgraph.ProtoGraphQueryType.GQL, query, graph, timeout, jsonFormat);
         }
 
         // parse delimiter and process strings like \r \n \002 \0xA
@@ -659,12 +702,20 @@ public class TuGraphDbRpcClient {
             return url;
         }
 
+        public String callCypher(String cypher, String graph, double timeout, boolean jsonFormat) {
+            return handleCypherRequest(cypher, graph, timeout, jsonFormat);
+        }
+
         public String callCypher(String cypher, String graph, double timeout) {
-            return handleCypherRequest(cypher, graph, timeout);
+            return handleCypherRequest(cypher, graph, timeout, true);
+        }
+
+        public String callGql(String gql, String graph, double timeout, boolean jsonFormat) {
+            return handleGqlRequest(gql, graph, timeout, jsonFormat);
         }
 
         public String callGql(String gql, String graph, double timeout) {
-            return handleGqlRequest(gql, graph, timeout);
+            return handleGqlRequest(gql, graph, timeout, true);
         }
 
         public String callProcedure(String procedureType, String procedureName, String param, double procedureTimeOut,
@@ -787,7 +838,7 @@ public class TuGraphDbRpcClient {
                     + "')";
             String res = callCypher(sb, graph, timeout);
             // this built-in procedure always returns "[]" for null.
-            if (JSONArray.parseArray(res).size() != 0) {
+            if (!JSONArray.parseArray(res).isEmpty()) {
                 throw new InputException(res);
             }
             return true;
@@ -812,7 +863,7 @@ public class TuGraphDbRpcClient {
                     + "')";
             String res = callCypher(sb, graph, timeout);
             // this built-in procedure always returns "[]" for null.
-            if (JSONArray.parseArray(res).size() != 0) {
+            if (!JSONArray.parseArray(res).isEmpty()) {
                 throw new InputException(res);
             }
             return true;
@@ -836,7 +887,7 @@ public class TuGraphDbRpcClient {
                     + "')";
             String res = callCypher(sb, graph, timeout);
             // this built-in procedure always returns "[]" for null.
-            if (JSONArray.parseArray(res).size() != 0) {
+            if (!JSONArray.parseArray(res).isEmpty()) {
                 throw new InputException(res);
             }
             return true;
@@ -892,11 +943,11 @@ public class TuGraphDbRpcClient {
                             + parseDelimiter(delimiter)
                             + "')";
                     String res = callCypher(sb, graph, timeout);
-                    if (JSONArray.parseArray(res).size() != 0) {
+                    if (!JSONArray.parseArray(res).isEmpty()) {
                         throw new InputException(res);
                     }
                     // this built-in procedure always returns "[]" for null.
-                    if (JSONArray.parseArray(res).size() != 0) {
+                    if (!JSONArray.parseArray(res).isEmpty()) {
                         throw new InputException(res);
                     }
                     buf = cutter.cut();
