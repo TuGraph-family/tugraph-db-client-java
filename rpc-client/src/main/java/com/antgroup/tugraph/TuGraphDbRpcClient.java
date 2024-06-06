@@ -82,11 +82,7 @@ public class TuGraphDbRpcClient {
     }
 
     public String callCypher(String cypher, String graph, double timeout) throws Exception {
-        if (clientType == ClientType.SINGLE_CONNECTION){
-            return baseClient.callCypher(cypher, graph, timeout);
-        } else {
-            return doubleCheckQuery(()-> getClient(Lgraph.ProtoGraphQueryType.CYPHER, cypher, graph).callCypher(cypher, graph, timeout));
-        }
+        return callCypher(cypher, graph, timeout, false);
     }
 
     public String callCypher(String cypher, String graph, double timeout, boolean withHeader) throws Exception {
@@ -98,11 +94,7 @@ public class TuGraphDbRpcClient {
     }
 
     public String callGql(String gql, String graph, double timeout) throws Exception {
-        if (clientType == ClientType.SINGLE_CONNECTION){
-            return baseClient.callGql(gql, graph, timeout);
-        } else {
-            return doubleCheckQuery(()-> getClient(Lgraph.ProtoGraphQueryType.GQL, gql, graph).callGql(gql, graph, timeout));
-        }
+        return callGql(gql, graph, timeout, false);
     }
 
     public String callGql(String gql, String graph, double timeout, boolean withHeader) throws Exception {
