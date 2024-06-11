@@ -239,13 +239,13 @@ public class TuGraphDbHaRpcClientTestCase {
         }
 
         // start HA group
-        executive("mkdir ha1 && cp -r ../../src/server/lgraph_ha.json ./lgraph_server ./resource ha1 && cd ha1 && ./lgraph_server --host " + host + " --port 27072 --enable_rpc true --enable_ha true --ha_node_offline_ms 5000 --ha_node_remove_ms 10000 --rpc_port 29092 --directory ./db --log_dir ./log  --ha_conf " + host + ":29092," + host + ":29093," + host + ":29094 -c lgraph_ha.json -d start");
+        executive("mkdir ha1 && cp -r ../../src/server/lgraph_ha.json ./lgraph_server ./resource ha1 && cd ha1 && ./lgraph_server --host " + host + " --port 27072 --enable_rpc true --enable_ha true --ha_node_offline_ms 5000 --ha_node_remove_ms 10000 --rpc_port 29092 --directory ./db --log_dir ./log --enable_plugin 1 --ha_conf " + host + ":29092," + host + ":29093," + host + ":29094 -c lgraph_ha.json -d start");
         Thread.sleep(3000);
 
-        executive("mkdir ha2 && cp -r ../../src/server/lgraph_ha.json ./lgraph_server ./resource ha2 && cd ha2 && ./lgraph_server --host " + host + " --port 27073 --enable_rpc true --enable_ha true --ha_node_offline_ms 5000 --ha_node_remove_ms 10000 --rpc_port 29093 --directory ./db --log_dir ./log  --ha_conf " + host + ":29092," + host + ":29093," + host + ":29094 -c lgraph_ha.json -d start");
+        executive("mkdir ha2 && cp -r ../../src/server/lgraph_ha.json ./lgraph_server ./resource ha2 && cd ha2 && ./lgraph_server --host " + host + " --port 27073 --enable_rpc true --enable_ha true --ha_node_offline_ms 5000 --ha_node_remove_ms 10000 --rpc_port 29093 --directory ./db --log_dir ./log --enable_plugin 1 --ha_conf " + host + ":29092," + host + ":29093," + host + ":29094 -c lgraph_ha.json -d start");
         Thread.sleep(3000);
 
-        executive("mkdir ha3 && cp -r ../../src/server/lgraph_ha.json ./lgraph_server ./resource ha3 && cd ha3 && ./lgraph_server --host " + host + " --port 27074 --enable_rpc true --enable_ha true --ha_node_offline_ms 5000 --ha_node_remove_ms 10000 --rpc_port 29094 --directory ./db --log_dir ./log  --ha_conf " + host + ":29092," + host + ":29093," + host + ":29094 -c lgraph_ha.json -d start");
+        executive("mkdir ha3 && cp -r ../../src/server/lgraph_ha.json ./lgraph_server ./resource ha3 && cd ha3 && ./lgraph_server --host " + host + " --port 27074 --enable_rpc true --enable_ha true --ha_node_offline_ms 5000 --ha_node_remove_ms 10000 --rpc_port 29094 --directory ./db --log_dir ./log --enable_plugin 1 --ha_conf " + host + ":29092," + host + ":29093," + host + ":29094 -c lgraph_ha.json -d start");
         Thread.sleep(3000);
 
         TuGraphDbRpcClient client = startHaClient("29092");
@@ -325,7 +325,7 @@ public class TuGraphDbHaRpcClientTestCase {
             log.info("-------------------------starting follower-------------------------");
             client.logout();
             Thread.sleep(1000 * 7);
-            executive("cd ha2 && ./lgraph_server --host " + host + " --port 27073 --enable_rpc true --enable_ha true --ha_node_offline_ms 5000 --ha_node_remove_ms 10000 --rpc_port 29093 --directory ./db --log_dir ./log  --ha_conf " + host + ":29092," + host + ":29093," + host + ":29094 -c lgraph_ha.json -d restart");
+            executive("cd ha2 && ./lgraph_server --host " + host + " --port 27073 --enable_rpc true --enable_ha true --ha_node_offline_ms 5000 --ha_node_remove_ms 10000 --rpc_port 29093 --directory ./db --log_dir ./log --enable_plugin 1 --ha_conf " + host + ":29092," + host + ":29093," + host + ":29094 -c lgraph_ha.json -d restart");
             Thread.sleep(1000 * 13);
             client = startHaClient("29092");
             Thread.sleep(1000 * 7);
@@ -351,7 +351,7 @@ public class TuGraphDbHaRpcClientTestCase {
             log.info("-------------------------starting leader-------------------------");
             client.logout();
             Thread.sleep(1000 * 7);
-            executive("cd ha1 && ./lgraph_server --host " + host + " --port 27072 --enable_rpc true --enable_ha true --ha_node_offline_ms 5000 --ha_node_remove_ms 10000 --rpc_port 29092 --directory ./db --log_dir ./log  --ha_conf " + host + ":29092," + host + ":29093," + host + ":29094 -c lgraph_ha.json -d restart");
+            executive("cd ha1 && ./lgraph_server --host " + host + " --port 27072 --enable_rpc true --enable_ha true --ha_node_offline_ms 5000 --ha_node_remove_ms 10000 --rpc_port 29092 --directory ./db --log_dir ./log --enable_plugin 1 --ha_conf " + host + ":29092," + host + ":29093," + host + ":29094 -c lgraph_ha.json -d restart");
             Thread.sleep(1000 * 13);
             client = startHaClient("29093");
             Thread.sleep(1000 * 7);
