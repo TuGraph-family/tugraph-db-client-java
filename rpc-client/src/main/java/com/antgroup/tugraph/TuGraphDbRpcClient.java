@@ -356,7 +356,7 @@ public class TuGraphDbRpcClient {
 
     private TuGraphSingleRpcClient getClient(boolean isReadQuery) throws Exception {
         if (isReadQuery) {
-            if (rpcClientPool.size() == 0){
+            if (rpcClientPool.isEmpty()){
                 throw new Exception("all instance is down, refuse req!");
             }
             TuGraphSingleRpcClient rpcClient = rpcClientPool.get(rpcClientPool.size() - 1);
@@ -396,13 +396,17 @@ public class TuGraphDbRpcClient {
             });
         } else {
             for (String url : urls) {
-                TuGraphSingleRpcClient rpcClient = new TuGraphSingleRpcClient("list://" + url, user, password);
-                String result = rpcClient.callCypher("CALL dbms.ha.clusterInfo()", "default", 10);
-                ClusterInfo clusterInfo = JSON.parseObject(JSON.parseArray(result).get(0).toString(), new TypeReference<ClusterInfo>(){});
-                if (clusterInfo.isMaster()) {
-                    leaderClient = rpcClient;
+                try {
+                    TuGraphSingleRpcClient rpcClient = new TuGraphSingleRpcClient("list://" + url, user, password);
+                    String result = rpcClient.callCypher("CALL dbms.ha.clusterInfo()", "default", 10);
+                    ClusterInfo clusterInfo = JSON.parseObject(JSON.parseArray(result).get(0).toString(), new TypeReference<ClusterInfo>(){});
+                    if (clusterInfo.isMaster()) {
+                        leaderClient = rpcClient;
+                    }
+                    rpcClientPool.add(rpcClient);
+                } catch (Exception e) {
+                    log.error(e.getMessage());
                 }
-                rpcClientPool.add(rpcClient);
             }
         }
     }
@@ -438,9 +442,9 @@ public class TuGraphDbRpcClient {
                 return queryInterface.method();
             } catch (Exception e2) {
                 log.error(e2.getMessage());
-                throw e2;
             }
         }
+        return null;
     }
 
     private static class TuGraphSingleRpcClient {
