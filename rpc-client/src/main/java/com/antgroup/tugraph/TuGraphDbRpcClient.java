@@ -14,6 +14,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lgraph.Lgraph;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -24,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * @Author: haoyongdong.hyd@antgroup.com
@@ -53,6 +55,7 @@ public class TuGraphDbRpcClient {
     // Attributes common to all types of clients
     private TuGraphSingleRpcClient leaderClient;
     private final List<TuGraphSingleRpcClient> rpcClientPool = new CopyOnWriteArrayList<>();
+    private final Set<String> failUrls = new CopyOnWriteArraySet<>();
     private List<UserDefinedProcedure> userDefinedProcedures = new CopyOnWriteArrayList<>();
     private List<BuiltInProcedure> builtInProcedures = new CopyOnWriteArrayList<>();
 
@@ -154,7 +157,7 @@ public class TuGraphDbRpcClient {
     }
 
     public String callProcedure(String procedureType, String procedureName, String param, double procedureTimeOut,
-                             boolean inProcess, String graph) throws Exception {
+                                boolean inProcess, String graph) throws Exception {
         return callProcedure(procedureType, procedureName, param, procedureTimeOut, inProcess, graph, false);
     }
 
@@ -188,7 +191,7 @@ public class TuGraphDbRpcClient {
     }
 
     public String callProcedureToLeader(String procedureType, String procedureName, String param, double procedureTimeOut,
-                                boolean inProcess, String graph) throws Exception {
+                                        boolean inProcess, String graph) throws Exception {
         return callProcedureToLeader(procedureType, procedureName, param, procedureTimeOut, inProcess, graph, false);
     }
 
@@ -202,7 +205,7 @@ public class TuGraphDbRpcClient {
     }
 
     public boolean loadProcedure(String sourceFile, String procedureType, String procedureName, String codeType,
-                              String procedureDescription, boolean readOnly, String version, String graph) throws Exception {
+                                 String procedureDescription, boolean readOnly, String version, String graph) throws Exception {
         if (clientType == ClientType.SINGLE_CONNECTION) {
             return baseClient.loadProcedure(sourceFile, procedureType, procedureName, codeType, procedureDescription, readOnly, version, graph);
         } else {
@@ -356,8 +359,11 @@ public class TuGraphDbRpcClient {
 
     private TuGraphSingleRpcClient getClient(boolean isReadQuery) throws Exception {
         if (isReadQuery) {
-            if (rpcClientPool.size() == 0){
+            if (CollectionUtils.isEmpty(rpcClientPool)) {
                 throw new Exception("all instance is down, refuse req!");
+            }
+            if (CollectionUtils.isNotEmpty(failUrls)) {
+                loadRpcClient(failUrls);
             }
             TuGraphSingleRpcClient rpcClient = rpcClientPool.get(rpcClientPool.size() - 1);
             loadBalance();
@@ -395,7 +401,14 @@ public class TuGraphDbRpcClient {
                 }
             });
         } else {
-            for (String url : urls) {
+            loadRpcClient(new HashSet<>(urls));
+        }
+    }
+
+    private void loadRpcClient(Set<String> urlList) {
+        Set<String> failList = new HashSet<>();
+        for (String url: urlList) {
+            try {
                 TuGraphSingleRpcClient rpcClient = new TuGraphSingleRpcClient("list://" + url, user, password);
                 String result = rpcClient.callCypher("CALL dbms.ha.clusterInfo()", "default", 10);
                 ClusterInfo clusterInfo = JSON.parseObject(JSON.parseArray(result).get(0).toString(), new TypeReference<ClusterInfo>(){});
@@ -403,8 +416,12 @@ public class TuGraphDbRpcClient {
                     leaderClient = rpcClient;
                 }
                 rpcClientPool.add(rpcClient);
+            } catch (Exception e) {
+                failList.add(url);
             }
         }
+        failUrls.clear();
+        failUrls.addAll(failList);
     }
 
     /**
@@ -438,9 +455,9 @@ public class TuGraphDbRpcClient {
                 return queryInterface.method();
             } catch (Exception e2) {
                 log.error(e2.getMessage());
-                throw e2;
             }
         }
+        return null;
     }
 
     private static class TuGraphSingleRpcClient {
