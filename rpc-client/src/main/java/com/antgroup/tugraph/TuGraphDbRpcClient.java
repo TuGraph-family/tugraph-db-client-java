@@ -363,7 +363,7 @@ public class TuGraphDbRpcClient {
 
         public TuGraphSingleRpcClient(String url, String user, String pass) {
             RpcClientOptions options = new RpcClientOptions();
-            options.setMaxTotalConnections(1000);
+            options.setMaxTotalConnections(100);
             options.setProtocolType(Options.ProtocolType.PROTOCOL_BAIDU_STD_VALUE);
             options.setLoadBalanceType(LoadBalanceStrategy.LOAD_BALANCE_FAIR);
             options.setWriteTimeoutMillis(TIMEOUTINMS);
