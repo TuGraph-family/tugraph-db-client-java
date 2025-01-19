@@ -359,11 +359,11 @@ public class TuGraphDbRpcClient {
 
     private TuGraphSingleRpcClient getClient(boolean isReadQuery) throws Exception {
         if (isReadQuery) {
-            if (CollectionUtils.isEmpty(rpcClientPool)) {
-                throw new Exception("all instance is down, refuse req!");
-            }
             if (CollectionUtils.isNotEmpty(failUrls)) {
                 loadRpcClient(failUrls);
+            }
+            if (CollectionUtils.isEmpty(rpcClientPool)) {
+                throw new Exception("all instance is down, refuse req!");
             }
             TuGraphSingleRpcClient rpcClient = rpcClientPool.get(rpcClientPool.size() - 1);
             loadBalance();
